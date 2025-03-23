@@ -6,15 +6,15 @@ authors = [
     {name = "alexdremov", email = "dremov.me@gmail.com"}
 ]
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = {text = "MIT"}
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 
@@ -26,7 +26,7 @@ Repository = "https://github.com/alexdremov/ml_research_tools"
 [tool.poetry]
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.11"
 typer = "^0.15.2"
 typer-cli = "^0.15.2"
 typing-extensions = "^4.12.2"
@@ -43,6 +43,7 @@ pandas = "^2.2.3"
 pypdf2 = "^3.0.1"
 rich-argparse = "^1.7.0"
 configparser = "^7.2.0"
+sphinxcontrib-programoutput = "^0.18"
 
 [tool.poetry.group.dev.dependencies]
 black = "^25.1.0"
@@ -53,11 +54,12 @@ pytest-cov = "^4.1.0"
 ruff = "^0.2.2"
 
 [tool.poetry.group.docs.dependencies]
-sphinx = "^7.2.6"
-sphinx-rtd-theme = "^2.0.0"
-sphinx-autobuild = "^2021.3.14"
-sphinx-markdown-builder = "^0.6.0"
+sphinx = "^8.2.3"
+sphinx-rtd-theme = "^3.0.2"
+sphinx-autobuild = "^2024.10.3"
+sphinx-markdown-builder = "^0.6.8"
 sphinx-book-theme = "^1.1.4"
+sphinx-autodoc-typehints = "^3.1.0"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^8.3.5"
@@ -71,14 +73,14 @@ line-length = 100
 
 [tool.black]
 line-length = 100
-target-version = ["py310"]
+target-version = ["py311"]
 
 [tool.isort]
 profile = "black"
 line_length = 100
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.11"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true

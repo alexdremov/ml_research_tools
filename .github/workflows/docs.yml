@@ -25,18 +25,19 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.11'
           cache: 'poetry'
 
       - name: Install dependencies
         run: |
-          poetry env use 3.10
+          poetry env use 3.11
           eval $(poetry env activate)
           poetry install --all-groups --all-extras
           poetry sync
 
       - name: Build documentation
         run: |
+          poetry run sphinx-apidoc -o docs/source/api/ ml_research_tools
           cd docs
           poetry run make html
 

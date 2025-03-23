@@ -1,6 +1,6 @@
 # ML Research Tools
 
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Documentation](https://github.com/alexdremov/ml_research_tools/actions/workflows/docs.yml/badge.svg)](https://github.com/alexdremov/ml_research_tools/actions/workflows/docs.yml)
 [![Documentation Status](https://img.shields.io/badge/docs-latest-brightgreen.svg)](https://alexdremov.github.io/ml_research_tools/)
@@ -55,7 +55,7 @@ The toolkit can be configured through multiple methods, with a cascading priorit
 
 ### Configuration File
 
-By default, the configuration is stored in `~/.config/ml_research_tools/config.yaml`. 
+By default, the configuration is stored in `~/.config/ml_research_tools/config.yaml`.
 If this file doesn't exist, it will be created with default values when the tool is first run.
 
 Example configuration file:
@@ -156,10 +156,10 @@ ml_research_tools/
    # Format code
    poetry run black .
    poetry run isort .
-   
+
    # Check typing
    poetry run mypy .
-   
+
    # Run linter
    poetry run ruff .
    ```
@@ -180,10 +180,10 @@ from ml_research_tools.core.base_tool import BaseTool
 class MyNewTool(BaseTool):
     name = "my-tool"
     description = "Description of my new tool"
-    
+
     def add_arguments(self, parser):
         parser.add_argument("--option", help="An option for my tool")
-        
+
     def execute(self, config, args):
         # Implementation
         return 0  # Success
