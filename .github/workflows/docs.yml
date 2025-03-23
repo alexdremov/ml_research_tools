@@ -36,10 +36,8 @@ jobs:
 
       - name: Build documentation
         run: |
-          poetry env use 3.10
-          eval $(poetry env activate)
           cd docs
-          make html
+          poetry run make html
 
       - name: Setup Pages
         if: github.event_name != 'pull_request'

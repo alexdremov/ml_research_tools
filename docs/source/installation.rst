@@ -1,7 +1,7 @@
 Installation
 ============
 
-ML Research Tools can be installed from PyPI or directly from source.
+ML Research Tools can be installed from PyPI or directly from source using Poetry.
 
 From PyPI (Recommended)
 ----------------------
@@ -21,7 +21,7 @@ To install from source:
 
    git clone https://github.com/alexdremov/ml_research_tools.git
    cd ml_research_tools
-   pip install -e .
+   poetry install
 
 Development Installation
 ----------------------
@@ -30,7 +30,7 @@ For development purposes, install with additional development dependencies:
 
 .. code-block:: bash
 
-   pip install -e ".[dev]"
+   poetry install --with dev
 
 This will install additional packages needed for development, such as testing and code quality tools.
 
@@ -46,34 +46,7 @@ For building documentation:
 
 .. code-block:: bash
 
-   pip install -e ".[docs]"
-
-PDF Document Support
-~~~~~~~~~~~~~~~~~~~
-
-For PDF document handling in the ask-document tool:
-
-.. code-block:: bash
-
-   pip install PyPDF2
-
-Web Page Handling
-~~~~~~~~~~~~~~~~
-
-For handling web pages in the ask-document tool:
-
-.. code-block:: bash
-
-   pip install requests beautifulsoup4
-
-Weights & Biases Support
-~~~~~~~~~~~~~~~~~~~~~~~
-
-For the wandb-downloader tool:
-
-.. code-block:: bash
-
-   pip install wandb
+   poetry install --with docs
 
 All Optional Dependencies
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -82,7 +55,7 @@ To install all optional dependencies:
 
 .. code-block:: bash
 
-   pip install -e ".[all]"
+   poetry install --all-extras
 
 Verifying Installation
 --------------------
@@ -91,7 +64,7 @@ After installation, verify by running:
 
 .. code-block:: bash
 
-   ml_research_tools --help
+   poetry run ml_research_tools --help
 
 This should display the help message with all available tools and options.
 
@@ -101,7 +74,7 @@ Requirements
 ML Research Tools requires:
 
 * Python 3.10 or later
-* Dependencies as specified in setup.py
+* Poetry for dependency management
 
 Optional Dependencies
 -------------------

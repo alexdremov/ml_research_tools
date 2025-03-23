@@ -59,7 +59,7 @@ Ask a specific question about a LaTeX file:
 
 .. code-block:: bash
 
-    ml_research_tools ask-document thesis.tex --non-interactive --query "What is the main contribution in this paper?"
+    ml_research_tools ask-document thesis.tex --query "What is the main contribution in this paper?"
 
 Chat with content from a website:
 

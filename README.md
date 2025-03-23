@@ -42,7 +42,7 @@ pip install ml_research_tools
 ```bash
 git clone https://github.com/alexdremov/ml_research_tools.git
 cd ml_research_tools
-pip install -e .
+poetry install
 ```
 
 ## Configuration
@@ -145,23 +145,23 @@ ml_research_tools/
 1. Clone the repository
 2. Install development dependencies:
    ```bash
-   pip install -e ".[dev]"
+   poetry install --with dev
    ```
 3. Run tests:
    ```bash
-   pytest
+   poetry run pytest
    ```
 4. Code quality tools:
    ```bash
    # Format code
-   black .
-   isort .
+   poetry run black .
+   poetry run isort .
    
    # Check typing
-   mypy .
+   poetry run mypy .
    
    # Run linter
-   ruff .
+   poetry run ruff .
    ```
 
 ### Adding a New Tool
@@ -200,9 +200,9 @@ The full documentation is available at [https://alexdremov.github.io/ml_research
 To build the documentation locally:
 
 ```bash
-pip install -e ".[docs]"
+poetry install --with docs
 cd docs
-make html
+poetry run make html
 ```
 
 Then open `docs/build/html/index.html` in your browser.

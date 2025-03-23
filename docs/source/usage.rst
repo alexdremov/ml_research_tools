@@ -170,10 +170,10 @@ The tools that use LLM capabilities support selecting different models:
 .. code-block:: bash
 
     # Use a specific preset
-    ml_research_tools latex-grammar paper.tex --llm-preset=premium
+    ml_research_tools --llm-preset=premium latex-grammar paper.tex
     
     # Use a specific tier
-    ml_research_tools latex-grammar paper.tex --llm-tier=standard
+    ml_research_tools  --llm-tier=standard latex-grammar paper.tex
 
 To list available LLM presets:
 

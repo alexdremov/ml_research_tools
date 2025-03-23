@@ -30,7 +30,6 @@ jobs:
       - name: Install dependencies
         run: |
           poetry env use ${{ matrix.python-version }}
-          eval $(poetry env activate)
           poetry install --all-groups --all-extras
 
       # - name: Run tests
@@ -40,7 +39,6 @@ jobs:
       - name: Check code quality
         run: |
           poetry env use ${{ matrix.python-version }}
-          eval $(poetry env activate)
           poetry run black --check .
           poetry run isort --check .
           # poetry run mypy .
