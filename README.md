@@ -10,7 +10,7 @@ A collection of tools for machine learning research, including experiment manage
 
 ## Key Features
 
-
+![](assets/tools.svg)
 
 - **LaTeX Tools**
   - Grammar and style checker for LaTeX documents
