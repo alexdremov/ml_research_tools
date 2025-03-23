@@ -1,26 +1,70 @@
 [project]
 name = "ml_research_tools"
-version = "1.0.0"
-description = ""
+version = "0.2.1"
+description = "A collection of tools for machine learning research, including experiment management, Kubernetes utilities, and LaTeX processing."
 authors = [
-    {name = "alexdremov",email = "dremov.me@gmail.com"}
+    {name = "alexdremov", email = "dremov.me@gmail.com"}
 ]
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = [
-    "wandb (>=0.19.8,<0.20.0)",
-    "tqdm (>=4.67.1,<5.0.0)",
-    "python-dotenv (>=1.0.1,<2.0.0)",
-    "openai (>=1.66.3,<2.0.0)",
-    "redis (>=5.2.1,<6.0.0)",
-    "configparser (>=7.2.0,<8.0.0)"
+license = {text = "MIT"}
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
+
+[project.urls]
+Documentation = "hhttps://alexdremov.github.io/ml_research_tools/"
+Repository = "https://github.com/alexdremov/ml_research_tools"
+"Bug Tracker" = "https://github.com/alexdremov/ml_research_tools/issues"
 
 [tool.poetry]
 
 [tool.poetry.group.dev.dependencies]
 black = "^25.1.0"
 isort = "^6.0.1"
+mypy = "^1.9.0"
+pytest = "^8.0.0"
+pytest-cov = "^4.1.0"
+ruff = "^0.2.2"
+
+[tool.poetry.group.docs.dependencies]
+sphinx = "^7.2.6"
+sphinx-rtd-theme = "^2.0.0"
+sphinx-autobuild = "^2021.3.14"
+sphinx-markdown-builder = "^0.6.0"
+sphinx-book-theme = "^1.1.4"
+
+
+[tool.poetry.group.test.dependencies]
+pytest = "^8.3.5"
+
+[tool.poetry.scripts]
+ml_research_tools = "ml_research_tools.__main__:main"
+
+[tool.ruff]
+select = ["E", "F", "I"]
+line-length = 100
+
+[tool.black]
+line-length = 100
+target-version = ["py310"]
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
