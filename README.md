@@ -6,7 +6,7 @@
 [![Documentation Status](https://img.shields.io/badge/docs-latest-brightgreen.svg)](https://alexdremov.github.io/ml_research_tools/)
 [![Tests](https://github.com/alexdremov/ml_research_tools/actions/workflows/test.yml/badge.svg)](https://github.com/alexdremov/ml_research_tools/actions/workflows/test.yml)
 
-A comprehensive toolkit for machine learning research workflows, designed to streamline common tasks in experimentation, documentation, and deployment processes.
+A collection of tools for machine learning research, including experiment management, Kubernetes utilities, and LaTeX processing.
 
 ## Key Features
 
@@ -15,9 +15,7 @@ A comprehensive toolkit for machine learning research workflows, designed to str
   - Automatic suggestions for improving technical writing
 
 - **LLM Integration**
-  - Easy interaction with OpenAI and compatible LLMs
-  - Chat and completion interfaces with robust error handling
-  - Automatic retries and caching to reduce API costs
+  - Easy interaction with OpenAI API compatible LLMs
   - Support for multiple model presets and tiers
 
 - **Document Tools**
@@ -67,18 +65,16 @@ Example configuration file:
 ```yaml
 logging:
   level: INFO
-  file: /path/to/log/file.log
 redis:
   host: localhost
   port: 6379
   db: 0
-  password: optional_password
   enabled: true
   ttl: 604800  # 7 days in seconds
 llm:
-  default: "standard"  # Default preset to use
+  default: "openai"  # Default preset to use
   presets:
-    standard:
+    openai:
       base_url: https://api.openai.com/v1
       model: gpt-3.5-turbo
       max_tokens: 8000
@@ -88,14 +84,16 @@ llm:
       retry_delay: 5
       api_key: null
       tier: standard
-    premium:
-      base_url: https://api.openai.com/v1
-      model: gpt-4o
-      max_tokens: 8000
+
+    ollama:
+      model: gemma3
+      base_url: http://127.0.0.1:3333/v1/
+
+    perplexity:
+      base_url: https://api.perplexity.ai/
+      model: sonar-pro
+      max_tokens: 128000
       temperature: 0.01
-      top_p: 1.0
-      retry_attempts: 3
-      retry_delay: 5
       api_key: null
       tier: premium
 ```
@@ -108,24 +106,75 @@ Configuration can be overridden using command-line arguments:
 ml_research_tools --log-level DEBUG --redis-host redis.example.com --llm-preset premium paper.tex latex-grammar paper.tex
 ```
 
-Available configuration options:
+```
+Usage: ml_research_tools [-h] [--config CONFIG]
+                         [--log-level {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
+                         [--log-file LOG_FILE] [-v] [--redis-host REDIS_HOST]
+                         [--redis-port REDIS_PORT] [--redis-db REDIS_DB]
+                         [--redis-password REDIS_PASSWORD] [--redis-disable]
+                         [--redis-recache] [--llm-preset LLM_PRESET]
+                         [--llm-tier LLM_TIER] [--llm-api-key LLM_API_KEY]
+                         [--llm-base-url LLM_BASE_URL] [--llm-model LLM_MODEL]
+                         [--llm-max-tokens LLM_MAX_TOKENS]
+                         [--llm-temperature LLM_TEMPERATURE]
+                         [--llm-top-p LLM_TOP_P]
+                         [--llm-retry-attempts LLM_RETRY_ATTEMPTS]
+                         [--llm-retry-delay LLM_RETRY_DELAY] [--list-presets]
+                         [--list-tools]
+                         {help,ask-document,wandb-downloader,kube-pod-forward,latex-grammar}
+                         ...
 
-| Option           | Description                   | Default      |
-|------------------|-------------------------------|--------------|
-| `--config`       | Path to configuration file    | ~/.config/ml_research_tools/config.yaml |
-| `--log-level`    | Logging level                 | INFO         |
-| `--log-file`     | Path to log file              | None         |
-| `--verbose`      | Enable verbose logging        | False        |
-| `--redis-host`   | Redis host                    | localhost    |
-| `--redis-port`   | Redis port                    | 6379         |
-| `--redis-db`     | Redis database number         | 0            |
-| `--redis-password` | Redis password              | None         |
-| `--redis-disable` | Disable Redis caching        | Enabled      |
-| `--redis-recache` | Recache results              | False        |
-| `--llm-preset`   | LLM preset to use             | standard     |
-| `--llm-tier`     | LLM tier to use               | None         |
-| `--list-presets` | List available LLM presets    | False        |
-| `--list-tools`   | List available tools          | False        |
+ML Research Tools - A collection of utilities for ML research
+
+Options:
+  -h, --help            show this help message and exit
+  --list-presets        List available LLM presets and exit
+  --list-tools          List available tools and exit
+
+Configuration:
+  --config CONFIG       Path to configuration file (default:
+                        ~/.config/ml_research_tools/config.yaml)
+
+Logging:
+  --log-level {DEBUG,INFO,WARNING,ERROR,CRITICAL}
+                        Logging level
+  --log-file LOG_FILE   Path to log file
+  -v, --verbose         Enable verbose logging
+
+Redis:
+  --redis-host REDIS_HOST
+                        Redis host
+  --redis-port REDIS_PORT
+                        Redis port
+  --redis-db REDIS_DB   Redis database number
+  --redis-password REDIS_PASSWORD
+                        Redis password
+  --redis-disable       Disable Redis caching
+  --redis-recache       Disable Redis caching retrieval, but allow saving
+
+Llm:
+  --llm-preset LLM_PRESET
+                        LLM preset name to use (e.g., 'standard', 'premium')
+  --llm-tier LLM_TIER   LLM tier to use (e.g., 'standard', 'premium')
+  --llm-api-key LLM_API_KEY
+                        API key for LLM service
+  --llm-base-url LLM_BASE_URL
+                        Base URL for the LLM API endpoint
+  --llm-model LLM_MODEL
+                        LLM model to use
+  --llm-max-tokens LLM_MAX_TOKENS
+                        Maximum tokens for LLM response
+  --llm-temperature LLM_TEMPERATURE
+                        Temperature for LLM sampling
+  --llm-top-p LLM_TOP_P
+                        Top-p value for LLM sampling
+  --llm-retry-attempts LLM_RETRY_ATTEMPTS
+                        Number of retry attempts for LLM API calls
+  --llm-retry-delay LLM_RETRY_DELAY
+                        Delay between retry attempts for LLM API calls
+                        (seconds)
+```
+
 
 ## Development
 
@@ -170,7 +219,8 @@ class MyNewTool(BaseTool):
     name = "my-tool"
     description = "Description of my new tool"
 
-    def add_arguments(self, parser):
+    @classmethod
+    def add_arguments(cls, parser):
         parser.add_argument("--option", help="An option for my tool")
 
     def execute(self, config, args):
@@ -195,16 +245,6 @@ poetry run make html
 ```
 
 Then open `docs/build/html/index.html` in your browser.
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
 
 ## LLM Disclosure
 
