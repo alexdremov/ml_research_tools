@@ -17,7 +17,7 @@ from rich.table import Table
 from rich.text import Text
 from rich.theme import Theme
 from rich.traceback import install as install_rich_traceback
-from rich_argparse import RichHelpFormatter, HelpPreviewAction
+from rich_argparse import HelpPreviewAction, RichHelpFormatter
 
 # Install rich traceback handler for better error display
 install_rich_traceback(show_locals=True)
@@ -168,7 +168,6 @@ def main(args: Optional[List[str]] = None) -> int:
             "--generate-tool-help-preview",
             action=HelpPreviewAction,
         )
-
 
     parsed_args = parser.parse_args(args)
 
