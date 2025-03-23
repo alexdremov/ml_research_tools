@@ -37,14 +37,28 @@ Example Configuration
       ttl: 604800  # 7 days in seconds
 
     llm:
-      base_url: https://api.openai.com/v1
-      model: gpt-3.5-turbo
-      max_tokens: 8000
-      temperature: 0.01
-      top_p: 1.0
-      retry_attempts: 3
-      retry_delay: 5
-      api_key: null  # Will be overridden by OPENAI_API_KEY env var if available
+      default: "standard"  # Default preset to use
+      presets:
+        standard:
+          base_url: https://api.openai.com/v1
+          model: gpt-3.5-turbo
+          max_tokens: 8000
+          temperature: 0.01
+          top_p: 1.0
+          retry_attempts: 3
+          retry_delay: 5
+          api_key: null  # Will be overridden by OPENAI_API_KEY env var if available
+          tier: standard
+        premium:
+          base_url: https://api.openai.com/v1
+          model: gpt-4o
+          max_tokens: 8000
+          temperature: 0.01
+          top_p: 1.0
+          retry_attempts: 3
+          retry_delay: 5
+          api_key: null  # Will be overridden by OPENAI_API_KEY env var if available
+          tier: premium
 
 Command-line Arguments
 ---------------------
@@ -53,7 +67,7 @@ Configuration can be overridden using command-line arguments. Global options app
 
 .. code-block:: bash
 
-    ml_research_tools --log-level DEBUG --redis-host redis.example.com --llm-model gpt-4-turbo
+    ml_research_tools --log-level DEBUG --redis-host redis.example.com --llm-preset premium
 
 Configuration Reference
 ---------------------
@@ -64,4 +78,4 @@ Configuration Reference
 Tool-Specific Configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Some tools have additional configuration options that can be specified in the configuration file or as command-line arguments. See the documentation for each tool for details. ¸
+Some tools have additional configuration options that can be specified in the configuration file or as command-line arguments. See the documentation for each tool for details.

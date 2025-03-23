@@ -8,13 +8,13 @@ To build the documentation locally:
 
 1. Install the package with documentation dependencies:
    ```bash
-   pip install -e ".[docs]"
+   poetry install --with docs
    ```
 
 2. Build the HTML documentation:
    ```bash
    cd docs
-   make html
+   poetry run make html
    ```
 
 3. Open the built documentation:

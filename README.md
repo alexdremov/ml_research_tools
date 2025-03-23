@@ -18,6 +18,10 @@ A comprehensive toolkit for machine learning research workflows, designed to str
   - Easy interaction with OpenAI and compatible LLMs
   - Chat and completion interfaces with robust error handling
   - Automatic retries and caching to reduce API costs
+  - Support for multiple model presets and tiers
+
+- **Document Tools**
+  - Ask questions and get answers about documentation
 
 - **Experiment Management**
   - Weights & Biases run logs downloader
@@ -72,14 +76,28 @@ redis:
   enabled: true
   ttl: 604800  # 7 days in seconds
 llm:
-  base_url: https://api.openai.com/v1
-  model: gpt-3.5-turbo
-  max_tokens: 8000
-  temperature: 0.01
-  top_p: 1.0
-  retry_attempts: 3
-  retry_delay: 5
-  api_key: null
+  default: "standard"  # Default preset to use
+  presets:
+    standard:
+      base_url: https://api.openai.com/v1
+      model: gpt-3.5-turbo
+      max_tokens: 8000
+      temperature: 0.01
+      top_p: 1.0
+      retry_attempts: 3
+      retry_delay: 5
+      api_key: null
+      tier: standard
+    premium:
+      base_url: https://api.openai.com/v1
+      model: gpt-4o
+      max_tokens: 8000
+      temperature: 0.01
+      top_p: 1.0
+      retry_attempts: 3
+      retry_delay: 5
+      api_key: null
+      tier: premium
 ```
 
 ### Command-line Arguments
@@ -87,7 +105,7 @@ llm:
 Configuration can be overridden using command-line arguments:
 
 ```bash
-ml_research_tools --log-level DEBUG --redis-host redis.example.com --llm-model gpt-4-turbo paper.tex latex-grammar paper.tex
+ml_research_tools --log-level DEBUG --redis-host redis.example.com --llm-preset premium paper.tex latex-grammar paper.tex
 ```
 
 Available configuration options:
@@ -97,48 +115,19 @@ Available configuration options:
 | `--config`       | Path to configuration file    | ~/.config/ml_research_tools/config.yaml |
 | `--log-level`    | Logging level                 | INFO         |
 | `--log-file`     | Path to log file              | None         |
+| `--verbose`      | Enable verbose logging        | False        |
 | `--redis-host`   | Redis host                    | localhost    |
 | `--redis-port`   | Redis port                    | 6379         |
 | `--redis-db`     | Redis database number         | 0            |
 | `--redis-password` | Redis password              | None         |
-| `--redis-disable` | Disable Redis caching   | Enabled      |
-| `--redis-recache` | Recache results               | False        |
-| `--llm-api-key`  | API key for LLM service       | None         |
-| `--llm-base-url` | Base URL for LLM API          | https://api.openai.com/v1 |
-| `--llm-model`    | LLM model to use              | gpt-3.5-turbo |
-| `--llm-max-tokens` | Maximum tokens for response | 8000         |
-| `--llm-temperature` | Sampling temperature      | 0.01         |
-| `--llm-top-p`    | Top-p sampling parameter      | 1.0          |
-| `--llm-retry-attempts` | Retry attempts      | 3            |
-| `--llm-retry-delay` | Base delay between retries | 5           |
+| `--redis-disable` | Disable Redis caching        | Enabled      |
+| `--redis-recache` | Recache results              | False        |
+| `--llm-preset`   | LLM preset to use             | standard     |
+| `--llm-tier`     | LLM tier to use               | None         |
+| `--list-presets` | List available LLM presets    | False        |
+| `--list-tools`   | List available tools          | False        |
 
 ## Development
-
-### Project Structure
-
-```
-ml_research_tools/
-├── __init__.py        # Package initialization
-├── __main__.py        # CLI entry point
-├── core/              # Core functionality
-│   ├── __init__.py
-│   ├── base_tool.py   # Base class for tools
-│   ├── config.py      # Configuration system
-│   ├── llm_tools.py   # LLM integration utilities
-│   └── logging_tools.py # Logging utilities
-├── cache/             # Caching system
-│   ├── __init__.py
-│   └── redis.py       # Redis caching implementation
-├── exp/               # Experiment management
-│   ├── __init__.py
-│   └── wandb_downloader_tool.py # W&B run logs downloader
-├── kube/              # Kubernetes utilities
-│   ├── __init__.py
-│   └── pod_forward_tool.py # Pod port forwarding
-└── tex/               # LaTeX utilities
-    ├── __init__.py
-    └── latex_grammar_tool.py # LaTeX grammar checker
-```
 
 ### Development Workflow
 

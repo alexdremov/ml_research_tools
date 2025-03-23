@@ -48,15 +48,30 @@ ML Research Tools uses a service locator pattern for dependency injection. The t
 
    .. code-block:: python
 
-       from ml_research_tools.core import Config
-       config = Config.from_dict({"redis": {"enabled": True}})
+       from ml_research_tools.core.config import Config
+       
+       config = Config.from_dict({
+           "llm": {
+               "default": "standard",
+               "presets": {
+                   "standard": {
+                       "model": "gpt-3.5-turbo",
+                       "api_key": "your-api-key",
+                       "tier": "standard"
+                   }
+               }
+           }
+       })
 
 2. Set up the service provider:
 
    .. code-block:: python
 
-       from ml_research_tools.core import setup_services
-       services = setup_services(config)
+       from ml_research_tools.core.service_provider import ServiceProvider
+       from ml_research_tools.core.service_factories import register_common_services
+       
+       services = ServiceProvider(config)
+       register_common_services(services)
 
 3. Create a tool instance with the service provider:
 

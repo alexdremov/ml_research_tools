@@ -29,6 +29,8 @@ These options apply to all tools:
      - Set logging level (default: INFO)
    * - ``--log-file FILE``
      - Log to file instead of stderr
+   * - ``--verbose``
+     - Enable verbose logging
    * - ``--redis-host HOST``
      - Redis host (default: localhost)
    * - ``--redis-port PORT``
@@ -37,10 +39,16 @@ These options apply to all tools:
      - Redis database number (default: 0)
    * - ``--redis-disable``
      - Disable Redis caching
-   * - ``--llm-api-key KEY``
-     - API key for LLM service
-   * - ``--llm-model MODEL``
-     - LLM model to use (default: gpt-3.5-turbo)
+   * - ``--redis-recache``
+     - Recache results (ignore cached values but still cache new results)
+   * - ``--llm-preset PRESET``
+     - LLM preset to use (e.g., 'standard', 'premium')
+   * - ``--llm-tier TIER``
+     - LLM tier to use (e.g., 'standard', 'premium')
+   * - ``--list-presets``
+     - List available LLM presets
+   * - ``--list-tools``
+     - List available tools
    * - ``--help``
      - Show help message and exit
 
@@ -103,8 +111,15 @@ Create a configuration file to save common settings:
       port: 6379
       enabled: true
     llm:
-      model: gpt-4
-      api_key: your-api-key-here
+      default: "premium"
+      presets:
+        standard:
+          model: gpt-3.5-turbo
+          tier: standard
+        premium:
+          model: gpt-4o
+          tier: premium
+          api_key: your-api-key-here
 
 Using Environment Variables
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -126,12 +141,29 @@ ML Research Tools can be used programmatically in Python scripts:
 
     from ml_research_tools.tex import LatexGrammarTool
     from ml_research_tools.core.config import Config
+    from ml_research_tools.core.service_provider import ServiceProvider
+    from ml_research_tools.core.service_factories import register_common_services
     
     # Create configuration
-    config = Config(llm={"api_key": "your-api-key"})
+    config = Config.from_dict({
+        "llm": {
+            "default": "standard",
+            "presets": {
+                "standard": {
+                    "api_key": "your-api-key",
+                    "model": "gpt-3.5-turbo",
+                    "tier": "standard"
+                }
+            }
+        }
+    })
+    
+    # Create service provider
+    services = ServiceProvider(config)
+    register_common_services(services)
     
     # Initialize the tool
-    tool = LatexGrammarTool({})
+    tool = LatexGrammarTool(services)
     
     # Create args object with required parameters
     class Args:
@@ -201,19 +233,28 @@ You can also use ML Research Tools directly in your Python code:
 
 .. code-block:: python
 
-    from ml_research_tools.core import Config, setup_services
+    from ml_research_tools.core.config import Config
+    from ml_research_tools.core.service_provider import ServiceProvider
+    from ml_research_tools.core.service_factories import register_common_services
     from ml_research_tools.tex import LatexGrammarTool
 
     # Load configuration
     config = Config.from_dict({
         "llm": {
-            "model": "gpt-3.5-turbo",
-            "api_key": "your-api-key"
+            "default": "standard",
+            "presets": {
+                "standard": {
+                    "model": "gpt-3.5-turbo",
+                    "api_key": "your-api-key",
+                    "tier": "standard"
+                }
+            }
         }
     })
 
     # Set up services
-    services = setup_services(config)
+    services = ServiceProvider(config)
+    register_common_services(services)
 
     # Create tool instance
     tool = LatexGrammarTool(services)
