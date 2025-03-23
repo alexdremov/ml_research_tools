@@ -1,6 +1,6 @@
 [project]
 name = "ml_research_tools"
-version = "0.2.1"
+version = "1.0.0"
 description = "A collection of tools for machine learning research, including experiment management, Kubernetes utilities, and LaTeX processing."
 authors = [
     {name = "alexdremov", email = "dremov.me@gmail.com"}
