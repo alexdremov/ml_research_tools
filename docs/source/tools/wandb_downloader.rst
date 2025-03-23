@@ -42,29 +42,3 @@ Using environment variables:
     export WANDB_PROJECT=myproject
     ml_research_tools wandb-downloader
 
-Output Structure
----------------
-
-Downloaded logs are organized in the following structure:
-
-.. code-block:: text
-
-    output_dir/
-    ├── run_id_1/
-    │   ├── config.json
-    │   ├── summary.json
-    │   └── history.json
-    ├── run_id_2/
-    │   ├── config.json
-    │   ├── summary.json
-    │   └── history.json
-    └── ...
-
-Requirements
------------
-
-This tool requires the Weights & Biases Python package:
-
-.. code-block:: bash
-
-    pip install wandb

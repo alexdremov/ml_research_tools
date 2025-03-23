@@ -9,9 +9,8 @@ Configuration Priority
 Configuration values are determined with the following priority (highest to lowest):
 
 1. Command-line arguments
-2. Environment variables
-3. Configuration file
-4. Default values
+2. Configuration file
+3. Default values
 
 Configuration File
 -----------------
@@ -26,20 +25,16 @@ Example Configuration
 
     logging:
       level: INFO
-      file: /path/to/log/file.log
-
     redis:
       host: localhost
       port: 6379
       db: 0
-      password: optional_password
       enabled: true
       ttl: 604800  # 7 days in seconds
-
     llm:
-      default: "standard"  # Default preset to use
+      default: "openai"  # Default preset to use
       presets:
-        standard:
+        openai:
           base_url: https://api.openai.com/v1
           model: gpt-3.5-turbo
           max_tokens: 8000
@@ -47,17 +42,19 @@ Example Configuration
           top_p: 1.0
           retry_attempts: 3
           retry_delay: 5
-          api_key: null  # Will be overridden by OPENAI_API_KEY env var if available
+          api_key: null
           tier: standard
-        premium:
-          base_url: https://api.openai.com/v1
-          model: gpt-4o
-          max_tokens: 8000
+
+        ollama:
+          model: gemma3
+          base_url: http://127.0.0.1:3333/v1/
+
+        perplexity:
+          base_url: https://api.perplexity.ai/
+          model: sonar-pro
+          max_tokens: 128000
           temperature: 0.01
-          top_p: 1.0
-          retry_attempts: 3
-          retry_delay: 5
-          api_key: null  # Will be overridden by OPENAI_API_KEY env var if available
+          api_key: null
           tier: premium
 
 Command-line Arguments

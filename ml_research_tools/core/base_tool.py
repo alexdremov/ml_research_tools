@@ -10,6 +10,7 @@ from abc import ABC, abstractmethod
 from typing import Any, List, Optional, TypeVar
 
 from rich.progress import BarColumn, Progress, SpinnerColumn, TaskProgressColumn, TextColumn
+from rich_argparse import RichHelpFormatter
 
 from ml_research_tools.core.config import Config, get_config
 from ml_research_tools.core.service_factories import register_common_services
@@ -60,7 +61,12 @@ class BaseTool(ABC):
         Returns:
             The created subparser
         """
-        parser = subparsers.add_parser(cls.name, description=cls.description, help=cls.description)
+        parser = subparsers.add_parser(
+            name=cls.name,
+            description=cls.description,
+            help=cls.description,
+            formatter_class=RichHelpFormatter,
+        )
         cls.add_arguments(parser)
         return parser
 

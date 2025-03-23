@@ -13,7 +13,7 @@ from rich.theme import Theme
 _console = None
 
 
-def get_console(theme: Optional[dict] = None) -> Console:
+def get_console(theme: Optional[dict] = None, **kwargs) -> Console:
     """Get a Rich console with optional theme.
 
     Args:
@@ -24,9 +24,11 @@ def get_console(theme: Optional[dict] = None) -> Console:
     """
     global _console
 
+    kwargs['record'] = True
+
     if _console is None:
         if theme:
-            _console = Console(theme=Theme(theme))
+            _console = Console(theme=Theme(theme), **kwargs)
         else:
             # Default theme for the application
             default_theme = {
@@ -41,7 +43,7 @@ def get_console(theme: Optional[dict] = None) -> Console:
                 "stats": "cyan",
                 "cache": "bright_blue",
             }
-            _console = Console(theme=Theme(default_theme))
+            _console = Console(theme=Theme(default_theme), **kwargs)
 
     return _console
 

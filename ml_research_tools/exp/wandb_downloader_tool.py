@@ -74,8 +74,6 @@ class WandbDownloaderTool(BaseTool):
             help="Don't delete logs for runs that no longer exist",
         )
 
-        parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose logging")
-
     def download_wandb_logs(
         self,
         entity: str,

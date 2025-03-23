@@ -12,45 +12,8 @@ The package provides a single command-line entry point ``ml_research_tools`` wit
 
     ml_research_tools [global options] <tool-name> [tool options]
 
-Global Options
--------------
 
-These options apply to all tools:
-
-.. list-table::
-   :header-rows: 1
-   :widths: 30 70
-
-   * - Option
-     - Description
-   * - ``--config FILE``
-     - Path to configuration file (default: ~/.config/ml_research_tools/config.yaml)
-   * - ``--log-level {DEBUG,INFO,WARNING,ERROR,CRITICAL}``
-     - Set logging level (default: INFO)
-   * - ``--log-file FILE``
-     - Log to file instead of stderr
-   * - ``--verbose``
-     - Enable verbose logging
-   * - ``--redis-host HOST``
-     - Redis host (default: localhost)
-   * - ``--redis-port PORT``
-     - Redis port (default: 6379)
-   * - ``--redis-db DB``
-     - Redis database number (default: 0)
-   * - ``--redis-disable``
-     - Disable Redis caching
-   * - ``--redis-recache``
-     - Recache results (ignore cached values but still cache new results)
-   * - ``--llm-preset PRESET``
-     - LLM preset to use (e.g., 'standard', 'premium')
-   * - ``--llm-tier TIER``
-     - LLM tier to use (e.g., 'standard', 'premium')
-   * - ``--list-presets``
-     - List available LLM presets
-   * - ``--list-tools``
-     - List available tools
-   * - ``--help``
-     - Show help message and exit
+.. program-output:: ml_research_tools --help
 
 Available Tools
 --------------
@@ -93,44 +56,6 @@ Forward ports to Kubernetes pods:
 
     ml_research_tools kube-pod-forward --namespace default web-app
 
-Common Usage Patterns
--------------------
-
-Using Configuration Files
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-Create a configuration file to save common settings:
-
-.. code-block:: yaml
-
-    # ~/.config/ml_research_tools/config.yaml
-    logging:
-      level: INFO
-    redis:
-      host: localhost
-      port: 6379
-      enabled: true
-    llm:
-      default: "premium"
-      presets:
-        standard:
-          model: gpt-3.5-turbo
-          tier: standard
-        premium:
-          model: gpt-4o
-          tier: premium
-          api_key: your-api-key-here
-
-Using Environment Variables
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-You can also use environment variables for configuration:
-
-.. code-block:: bash
-
-    export OPENAI_API_KEY=your-api-key-here
-    export WANDB_ENTITY=your-wandb-username
-    ml_research_tools wandb-downloader --project myproject
 
 Scripting
 ~~~~~~~~~
@@ -143,7 +68,7 @@ ML Research Tools can be used programmatically in Python scripts:
     from ml_research_tools.core.config import Config
     from ml_research_tools.core.service_provider import ServiceProvider
     from ml_research_tools.core.service_factories import register_common_services
-    
+
     # Create configuration
     config = Config.from_dict({
         "llm": {
@@ -157,22 +82,22 @@ ML Research Tools can be used programmatically in Python scripts:
             }
         }
     })
-    
+
     # Create service provider
     services = ServiceProvider(config)
     register_common_services(services)
-    
+
     # Initialize the tool
     tool = LatexGrammarTool(services)
-    
+
     # Create args object with required parameters
     class Args:
         pass
-    
+
     args = Args()
     args.input_file = "paper.tex"
     args.output_file = "improved_paper.tex"
-    
+
     # Execute the tool
     tool.execute(config, args)
 
@@ -190,7 +115,7 @@ To get help for a specific tool:
 .. code-block:: bash
 
     ml_research_tools TOOL --help
-    
+
     # For example:
     ml_research_tools latex-grammar --help
 
@@ -203,7 +128,7 @@ The tools that use LLM capabilities support selecting different models:
 
     # Use a specific preset
     ml_research_tools --llm-preset=premium latex-grammar paper.tex
-    
+
     # Use a specific tier
     ml_research_tools  --llm-tier=standard latex-grammar paper.tex
 
@@ -262,4 +187,4 @@ You can also use ML Research Tools directly in your Python code:
     # Execute the tool
     exit_code = tool.execute(config, args)
 
-For more detailed examples, see the individual tool documentation pages. 
+For more detailed examples, see the individual tool documentation pages.

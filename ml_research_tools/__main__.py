@@ -124,9 +124,6 @@ def main(args: Optional[List[str]] = None) -> int:
     Returns:
         Exit code (0 for success, non-zero for error).
     """
-    # Discover available tools
-    tools = discover_tools()
-
     parser = argparse.ArgumentParser(
         "ml_research_tools",
         description="ML Research Tools - A collection of utilities for ML research",
@@ -148,6 +145,12 @@ def main(args: Optional[List[str]] = None) -> int:
         action=HelpPreviewAction,
     )
 
+    parser.add_argument(
+        "--rich-capture-output",
+        default=None,
+        help="Capture output in a rich format to this file",
+    )
+
     # Add subparsers for each tool
     subparsers = parser.add_subparsers(
         dest="tool",
@@ -162,6 +165,7 @@ def main(args: Optional[List[str]] = None) -> int:
     )
 
     # Add tool subparsers
+    tools = discover_tools()
     for tool_name, tool_class in tools.items():
         tool_parser = tool_class.add_subparser(subparsers)
         tool_parser.add_argument(
@@ -170,8 +174,14 @@ def main(args: Optional[List[str]] = None) -> int:
         )
 
     parsed_args = parser.parse_args(args)
+    main_with_args(parser, parsed_args)
+    if parsed_args.rich_capture_output:
+        # Capture output in a rich format
+        console.save_svg(parsed_args.rich_capture_output, title="ML Research Tools Output")
 
+def main_with_args(parser, parsed_args):
     # Load configuration
+    tools = discover_tools()
     config, config_file = get_config(parsed_args)
 
     # Create application-wide service provider
@@ -180,9 +190,6 @@ def main(args: Optional[List[str]] = None) -> int:
         default_llm_preset=parsed_args.llm_preset,
         default_llm_tier=parsed_args.llm_tier,
     )
-
-    if args is None:
-        args = sys.argv[1:]
 
     try:
         # List tools if requested

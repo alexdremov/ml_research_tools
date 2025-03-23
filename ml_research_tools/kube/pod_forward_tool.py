@@ -61,7 +61,6 @@ class PodForwardTool(BaseTool):
             default="interactive",
             help="Pattern to match in pod name (default: interactive)",
         )
-        parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose logging")
 
     def run_kubectl_command(self, args: List[str]) -> Tuple[bool, str, str]:
         """Run a kubectl command and return the results.
