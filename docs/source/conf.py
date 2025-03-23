@@ -36,7 +36,9 @@ extensions = [
 ]
 
 templates_path = ["_templates"]
-exclude_patterns = []
+exclude_patterns = [
+    '_build',
+]
 
 # Options for HTML output
 html_theme = "sphinx_book_theme"
@@ -47,6 +49,7 @@ html_favicon = None  # Add favicon path if available
 html_css_files = [
     "css/custom.css",
 ]
+pygments_style = 'sphinx'
 
 # Theme options for sphinx-book-theme
 html_theme_options = {

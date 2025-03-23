@@ -275,7 +275,7 @@ def add_config_args(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
     config_group.add_argument(
         "--config",
         type=str,
-        help=f"Path to configuration file (default: {DEFAULT_CONFIG_FILE})",
+        help=f"Path to configuration file (default: ~/.config/ml_research_tools/config.yaml)",
     )
 
     config_group = parser.add_argument_group("Logging")

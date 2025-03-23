@@ -153,20 +153,20 @@ class RedisCache:
     including serialization and deserialization of complex Python objects.
 
     Example:
-        ```python
-        from ml_research_tools.config import get_config
-        from ml_research_tools.cache import RedisCache
+        ::
 
-        config = get_config()
-        cache = RedisCache(config.redis)
+            from ml_research_tools.config import get_config
+            from ml_research_tools.cache import RedisCache
 
-        # Cache a Python object
-        data = {"results": [1, 2, 3]}
-        cache.set("my_key", data)
+            config = get_config()
+            cache = RedisCache(config.redis)
 
-        # Get it back
-        retrieved = cache.get("my_key")
-        ```
+            # Cache a Python object
+            data = {"results": [1, 2, 3]}
+            cache.set("my_key", data)
+
+            # Get it back
+            retrieved = cache.get("my_key")
     """
 
     def __init__(self, config: RedisConfig):
@@ -321,17 +321,18 @@ def cached(
         Decorator function
 
     Example:
-        ```python
-        from ml_research_tools.cache.redis import cached
-        from ml_research_tools.config import get_config
+        ::
 
-        config = get_config()
+            from ml_research_tools.cache.redis import cached
+            from ml_research_tools.config import get_config
 
-        @cached(prefix="expensive_computation", ttl=3600)
-        def expensive_computation(a, b, c):
-            # ... some expensive calculation
-            return result
-        ```
+            config = get_config()
+
+            @cached(prefix="expensive_computation", ttl=3600)
+            def expensive_computation(a, b, c):
+                # ... some expensive calculation
+                return result
+
     """
 
     def decorator(func: Callable[..., R]) -> Callable[..., R]:

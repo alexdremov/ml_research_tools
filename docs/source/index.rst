@@ -51,12 +51,12 @@ Key Features
    tools/kube_pod_forward
 
 .. toctree::
-   :maxdepth: 2
    :caption: API Reference
-   :glob:
+   :maxdepth: 1
+   :titlesonly:
 
    api/overview
-   api/modules
+   api/ml_research_tools.rst
 
 Indices and tables
 ==================

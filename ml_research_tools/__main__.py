@@ -17,7 +17,7 @@ from rich.table import Table
 from rich.text import Text
 from rich.theme import Theme
 from rich.traceback import install as install_rich_traceback
-from rich_argparse import RichHelpFormatter
+from rich_argparse import RichHelpFormatter, HelpPreviewAction
 
 # Install rich traceback handler for better error display
 install_rich_traceback(show_locals=True)
@@ -143,6 +143,11 @@ def main(args: Optional[List[str]] = None) -> int:
 
     parser.add_argument("--list-tools", action="store_true", help="List available tools and exit")
 
+    parser.add_argument(
+        "--generate-help-preview",
+        action=HelpPreviewAction,
+    )
+
     # Add subparsers for each tool
     subparsers = parser.add_subparsers(
         dest="tool",
@@ -158,7 +163,12 @@ def main(args: Optional[List[str]] = None) -> int:
 
     # Add tool subparsers
     for tool_name, tool_class in tools.items():
-        tool_class.add_subparser(subparsers)
+        tool_parser = tool_class.add_subparser(subparsers)
+        tool_parser.add_argument(
+            "--generate-tool-help-preview",
+            action=HelpPreviewAction,
+        )
+
 
     parsed_args = parser.parse_args(args)
 

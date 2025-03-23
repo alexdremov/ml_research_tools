@@ -1,21 +1,15 @@
-ml\_research\_tools.exp package
-===============================
-
-Submodules
-----------
-
-ml\_research\_tools.exp.wandb\_downloader\_tool module
-------------------------------------------------------
-
-.. automodule:: ml_research_tools.exp.wandb_downloader_tool
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-Module contents
----------------
+ml\_research\_tools.exp
+=======================
 
 .. automodule:: ml_research_tools.exp
    :members:
    :show-inheritance:
    :undoc-members:
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   ml_research_tools.exp.wandb_downloader_tool

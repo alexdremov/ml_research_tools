@@ -10,41 +10,42 @@ This module provides a set of utilities for interacting with Large Language Mode
 2. **Factory Function**: Easy client creation through `create_llm_client`
 
 Example:
-    ```python
-    # Create client with default preset
-    client = create_llm_client()
-    response = client.simple_call(
-        text="Summarize the following paper: [paper text]",
-        system_prompt="You are a helpful academic assistant."
-    )
+    ::
 
-    # Use a specific preset
-    client = create_llm_client(preset="premium")
-    response = client.simple_call(
-        text="Explain this complex concept...",
-        system_prompt="You are a helpful academic assistant."
-    )
+        # Create client with default preset
+        client = create_llm_client()
+        response = client.simple_call(
+            text="Summarize the following paper: [paper text]",
+            system_prompt="You are a helpful academic assistant."
+        )
 
-    # Chat interface
-    messages = [
-        {"role": "system", "content": "You are a helpful assistant."},
-        {"role": "user", "content": "Hello, how are you?"},
-        {"role": "assistant", "content": "I'm doing well, thank you! How can I help you today?"},
-        {"role": "user", "content": "Can you explain quantum computing?"}
-    ]
-    client = create_llm_client(tier="premium")
-    response = client.call(messages=messages)
+        # Use a specific preset
+        client = create_llm_client(preset="premium")
+        response = client.simple_call(
+            text="Explain this complex concept...",
+            system_prompt="You are a helpful academic assistant."
+        )
 
-    # For raw OpenAI client access
-    openai_client = create_llm_client().get_openai_client()
+        # Chat interface
+        messages = [
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": "Hello, how are you?"},
+            {"role": "assistant", "content": "I'm doing well, thank you! How can I help you today?"},
+            {"role": "user", "content": "Can you explain quantum computing?"}
+        ]
+        client = create_llm_client(tier="premium")
+        response = client.call(messages=messages)
 
-    # Generate parameters for OpenAI API calls
-    params = generate_completion_params(
-        config=config,
-        messages=messages,
-        stream=True
-    )
-    ```
+        # For raw OpenAI client access
+        openai_client = create_llm_client().get_openai_client()
+
+        # Generate parameters for OpenAI API calls
+        params = generate_completion_params(
+            config=config,
+            messages=messages,
+            stream=True
+        )
+
 """
 
 import os
