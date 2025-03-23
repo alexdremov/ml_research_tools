@@ -19,7 +19,7 @@ classifiers = [
 ]
 
 [project.urls]
-Documentation = "hhttps://alexdremov.github.io/ml_research_tools/"
+Documentation = "https://alexdremov.github.io/ml_research_tools/"
 Repository = "https://github.com/alexdremov/ml_research_tools"
 "Bug Tracker" = "https://github.com/alexdremov/ml_research_tools/issues"
 

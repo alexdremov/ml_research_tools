@@ -27,5 +27,7 @@ jobs:
 
     - name: Build and publish
       run: |
+        poetry install --all-groups --all-extras
+        poetry sync
         poetry build
         poetry publish --no-interaction

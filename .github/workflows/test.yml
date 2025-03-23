@@ -31,6 +31,7 @@ jobs:
         run: |
           poetry env use ${{ matrix.python-version }}
           poetry install --all-groups --all-extras
+          poetry sync
 
       # - name: Run tests
       #   run: |

@@ -33,6 +33,7 @@ jobs:
           poetry env use 3.10
           eval $(poetry env activate)
           poetry install --all-groups --all-extras
+          poetry sync
 
       - name: Build documentation
         run: |
