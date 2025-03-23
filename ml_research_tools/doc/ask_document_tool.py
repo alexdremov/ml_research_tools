@@ -16,15 +16,11 @@ from pathlib import Path
 from typing import Optional
 from urllib.parse import urlparse
 
-import rich
 from openai.types.chat.chat_completion import ChatCompletion
 from rich.console import Console
 from rich.highlighter import ReprHighlighter
-from rich.live import Live
-from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.prompt import Prompt
-from rich.text import Text
 from rich.theme import Theme
 
 try:

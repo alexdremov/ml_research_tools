@@ -36,3 +36,6 @@ htmlcov/
 .env
 .env.*
 config.local.yaml
+
+.mypy_cache
+.ruff_cache

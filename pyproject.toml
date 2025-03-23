@@ -25,6 +25,25 @@ Repository = "https://github.com/alexdremov/ml_research_tools"
 
 [tool.poetry]
 
+[tool.poetry.dependencies]
+python = "^3.10"
+typer = "^0.15.2"
+typer-cli = "^0.15.2"
+typing-extensions = "^4.12.2"
+rich = "^13.9.4"
+wandb = "^0.19.8"
+tqdm = "^4.67.1"
+tiktoken = "^0.9.0"
+tenacity = "^9.0.0"
+redis = "^5.2.1"
+pyyaml = "^6.0.2"
+openai = "^1.68.2"
+numpy = "^2.2.4"
+pandas = "^2.2.3"
+pypdf2 = "^3.0.1"
+rich-argparse = "^1.7.0"
+configparser = "^7.2.0"
+
 [tool.poetry.group.dev.dependencies]
 black = "^25.1.0"
 isort = "^6.0.1"
@@ -39,7 +58,6 @@ sphinx-rtd-theme = "^2.0.0"
 sphinx-autobuild = "^2021.3.14"
 sphinx-markdown-builder = "^0.6.0"
 sphinx-book-theme = "^1.1.4"
-
 
 [tool.poetry.group.test.dependencies]
 pytest = "^8.3.5"

@@ -4,18 +4,12 @@ Kubernetes pod port forwarder tool - forwards local ports to pods matching a nam
 """
 import argparse
 import logging
-import os
-import re
-import signal
 import subprocess
-import sys
 import time
 from typing import Any, Dict, List, Optional, Tuple
 
-from rich.highlighter import ReprHighlighter
 from rich.panel import Panel
 from rich.table import Table
-from rich.text import Text
 
 from ml_research_tools.core.base_tool import BaseTool
 

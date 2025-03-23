@@ -17,12 +17,6 @@ import textwrap
 from configparser import ConfigParser
 from typing import Any, Dict, List, Optional
 
-from rich.markdown import Markdown
-from rich.panel import Panel
-from rich.table import Table
-from rich.text import Text
-from tqdm.auto import tqdm
-
 from ml_research_tools.cache import RedisCache
 from ml_research_tools.core.base_tool import BaseTool
 from ml_research_tools.core.config import Config
