@@ -3,9 +3,9 @@ ML Research Tools
 
 A comprehensive toolkit for machine learning research workflows, designed to streamline common tasks in experimentation, documentation, and deployment processes.
 
-.. image:: https://img.shields.io/badge/python-3.10+-blue.svg
+.. image:: https://img.shields.io/badge/python-3.11+-blue.svg
    :target: https://www.python.org/downloads/
-   :alt: Python 3.10+
+   :alt: Python 3.11+
 
 .. image:: https://img.shields.io/badge/License-MIT-yellow.svg
    :target: https://opensource.org/licenses/MIT
@@ -51,12 +51,12 @@ Key Features
    tools/kube_pod_forward
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    :caption: API Reference
+   :glob:
 
-   api/core
-   api/cache
-   api/llm
+   api/overview
+   api/modules
 
 Indices and tables
 ==================

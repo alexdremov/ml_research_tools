@@ -31,6 +31,8 @@ extensions = [
     "sphinx.ext.intersphinx",
     "sphinx.ext.autosummary",
     "sphinx_book_theme",
+    "sphinx_autodoc_typehints",
+    "sphinxcontrib.programoutput",
 ]
 
 templates_path = ["_templates"]

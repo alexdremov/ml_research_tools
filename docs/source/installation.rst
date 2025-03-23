@@ -73,7 +73,7 @@ Requirements
 
 ML Research Tools requires:
 
-* Python 3.10 or later
+* Python 3.11 or later
 * Poetry for dependency management
 
 Optional Dependencies
@@ -84,4 +84,4 @@ Depending on which tools you use, you may need:
 * Redis (for caching functionality)
 * LaTeX (for the LaTeX-related tools)
 * Weights & Biases account (for W&B integration)
-* Kubernetes access (for Kubernetes tools) 
+* Kubernetes access (for Kubernetes tools)

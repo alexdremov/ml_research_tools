@@ -47,28 +47,28 @@ ML Research Tools uses a service locator pattern for dependency injection. The t
 1. Create a configuration object:
 
    .. code-block:: python
-   
+
        from ml_research_tools.core import Config
        config = Config.from_dict({"redis": {"enabled": True}})
 
 2. Set up the service provider:
 
    .. code-block:: python
-   
+
        from ml_research_tools.core import setup_services
        services = setup_services(config)
 
 3. Create a tool instance with the service provider:
 
    .. code-block:: python
-   
+
        from ml_research_tools.tex import LatexGrammarTool
        tool = LatexGrammarTool(services)
 
 4. Execute the tool:
 
    .. code-block:: python
-   
+
        import argparse
        args = argparse.Namespace(input_file="paper.tex", output="improved.tex")
        tool.execute(config, args)
@@ -83,4 +83,4 @@ The package is organized into several modules:
 - ``ml_research_tools.tex`` - LaTeX processing tools
 - ``ml_research_tools.doc`` - Document processing tools
 - ``ml_research_tools.exp`` - Experiment management tools
-- ``ml_research_tools.kube`` - Kubernetes tools 
+- ``ml_research_tools.kube`` - Kubernetes tools

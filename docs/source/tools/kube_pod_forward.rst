@@ -17,31 +17,7 @@ Usage
 
     ml_research_tools kube-pod-forward [options] pod_name_pattern
 
-Options
--------
-
-.. list-table::
-   :header-rows: 1
-   :widths: 25 15 60
-
-   * - Option
-     - Default
-     - Description
-   * - ``--namespace``, ``-n``
-     - ``default``
-     - Kubernetes namespace
-   * - ``--local-port``, ``-l``
-     - ``8080``
-     - Local port to forward
-   * - ``--remote-port``, ``-r``
-     - ``8080``
-     - Remote pod port to forward to
-   * - ``--reconnect-delay``
-     - ``5``
-     - Seconds to wait before reconnecting
-   * - ``--show-kubectl-output``
-     - ``False``
-     - Show kubectl command output
+.. program-output:: ml_research_tools kube-pod-forward --help
 
 Examples
 --------
@@ -81,4 +57,4 @@ If you encounter issues:
 1. Ensure kubectl is installed and in your PATH
 2. Verify your kubeconfig is correctly set up
 3. Check that you have permissions to access the specified namespace
-4. Confirm the pod is running and the specified port is exposed 
+4. Confirm the pod is running and the specified port is exposed

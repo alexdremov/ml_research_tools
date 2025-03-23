@@ -17,34 +17,7 @@ Usage
 
     ml_research_tools latex-grammar [options] input_file.tex
 
-Options
--------
-
-.. list-table::
-   :header-rows: 1
-   :widths: 25 15 60
-
-   * - Option
-     - Default
-     - Description
-   * - ``--output-file``
-     - ``None``
-     - Output file. If not specified, prints to stdout
-   * - ``--diff-file``
-     - ``None`` 
-     - Create a diff file showing changes in unified diff format
-   * - ``--latexdiff-file``
-     - ``None``
-     - Create a LaTeX diff file using latexdiff (must be installed)
-   * - ``--config-file``
-     - ``None``
-     - Custom configuration file for the grammar checker
-   * - ``--max-words-per-chunk``
-     - ``1024``
-     - Maximum words per chunk when processing large documents
-   * - ``--edit-in-place``
-     - ``False``
-     - Edit the input file in place
+.. program-output:: ml_research_tools latex-grammar --help
 
 Examples
 --------
@@ -82,4 +55,4 @@ The tool can be customized using a configuration file with the following structu
     system = Your custom system prompt here
     user = Your custom user prompt template here
 
-Configuration can be specified with the ``--config-file`` option. 
+Configuration can be specified with the ``--config-file`` option.

@@ -17,34 +17,7 @@ Usage
 
     ml_research_tools wandb-downloader [options]
 
-Options
--------
-
-.. list-table::
-   :header-rows: 1
-   :widths: 25 15 60
-
-   * - Option
-     - Default
-     - Description
-   * - ``--entity``, ``-e``
-     - ``$WANDB_ENTITY``
-     - W&B entity (username or team name)
-   * - ``--project``, ``-p``
-     - ``$WANDB_PROJECT``
-     - W&B project name
-   * - ``--output-dir``, ``-o``
-     - ``wandb_logs``
-     - Directory to save downloaded logs
-   * - ``--quiet``, ``-q``
-     - ``False``
-     - Quiet mode (less output)
-   * - ``--timeout``
-     - ``30``
-     - API timeout in seconds
-   * - ``--keep-outdated``
-     - ``False``
-     - Keep outdated logs (don't delete)
+.. program-output:: ml_research_tools wandb-downloader --help
 
 Examples
 --------
@@ -94,4 +67,4 @@ This tool requires the Weights & Biases Python package:
 
 .. code-block:: bash
 
-    pip install wandb 
+    pip install wandb
