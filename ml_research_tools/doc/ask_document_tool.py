@@ -139,7 +139,7 @@ class LatexDocumentParser(TextDocumentParser):
     def can_handle(cls, file_path: str) -> bool:
         """Check if this parser can handle the given file type."""
         ext = Path(file_path).suffix.lower()
-        return ext in [".tex", ".latex"]
+        return ext in [".tex", ".latex", ".bib"]
 
 
 class PDFDocumentParser(DocumentParser):

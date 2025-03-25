@@ -44,6 +44,7 @@ pypdf2 = "^3.0.1"
 rich-argparse = "^1.7.0"
 configparser = "^7.2.0"
 sphinxcontrib-programoutput = "^0.18"
+matplotlib = "^3.10.1"
 
 [tool.poetry.group.dev.dependencies]
 black = "^25.1.0"
@@ -52,6 +53,7 @@ mypy = "^1.9.0"
 pytest = "^8.0.0"
 pytest-cov = "^4.1.0"
 ruff = "^0.2.2"
+jupyterlab = "^4.3.6"
 
 [tool.poetry.group.docs.dependencies]
 sphinx = "^8.2.3"
