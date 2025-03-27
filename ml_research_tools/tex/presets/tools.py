@@ -12,7 +12,7 @@ def set_plot_area_aspect(
     ),
     ratio: float = 1.6180339887,
     adjustable="box",
-    anchor="C",
+    anchor="NE",
 ):
     if isinstance(ax, matplotlib.axes.Axes):
         return _set_plot_area_aspect(ax, ratio, adjustable=adjustable, anchor=anchor)
@@ -45,7 +45,14 @@ def _set_plot_area_aspect(ax: matplotlib.axes.Axes, ratio, adjustable, anchor):
     # Calculate the aspect value to achieve desired display ratio
     # set_aspect() expects a y/x ratio, but our ratio parameter is width/height (x/y)
     # So we need to use 1/ratio and adjust for the current data range
-    aspect_value = abs((x_right - x_left) / (y_high - y_low)) * (1 / ratio)
+    x_mod, y_mod = (lambda x: x), (lambda y: y)
+    if ax.get_xscale() == "log":
+        x_mod = np.log10
+    if ax.get_yscale() == "log":
+        y_mod = np.log10
+    aspect_value = (1 / ratio) * abs(
+        (x_mod(x_right) - x_mod(x_left)) / (y_mod(y_high) - y_mod(y_low))
+    )
 
     # Set the aspect ratio
     ax.set_aspect(aspect_value, adjustable=adjustable, anchor=anchor)

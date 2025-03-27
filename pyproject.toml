@@ -1,18 +1,19 @@
 [project]
 name = "ml_research_tools"
-version = "1.0.2"
+version = "1.1.0"
 description = "A collection of tools for machine learning research, including experiment management, Kubernetes utilities, and LaTeX processing."
 authors = [
     {name = "alexdremov", email = "dremov.me@gmail.com"}
 ]
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 license = {text = "MIT"}
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
@@ -23,10 +24,13 @@ Documentation = "https://alexdremov.github.io/ml_research_tools/"
 Repository = "https://github.com/alexdremov/ml_research_tools"
 "Bug Tracker" = "https://github.com/alexdremov/ml_research_tools/issues"
 
+[project.entry-points."matplotlib.backend"]
+svglatex = "ml_research_tools.tex.backend"
+
 [tool.poetry]
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.10"
 typer = "^0.15.2"
 typer-cli = "^0.15.2"
 typing-extensions = "^4.12.2"
@@ -40,10 +44,9 @@ pyyaml = "^6.0.2"
 openai = "^1.68.2"
 numpy = "^2.2.4"
 pandas = "^2.2.3"
-pypdf2 = "^3.0.1"
+pypdf2 = ">=3.0.1"
 rich-argparse = "^1.7.0"
 configparser = "^7.2.0"
-sphinxcontrib-programoutput = "^0.18"
 matplotlib = "^3.10.1"
 
 [tool.poetry.group.dev.dependencies]
@@ -56,12 +59,13 @@ ruff = "^0.2.2"
 jupyterlab = "^4.3.6"
 
 [tool.poetry.group.docs.dependencies]
-sphinx = "^8.2.3"
-sphinx-rtd-theme = "^3.0.2"
-sphinx-autobuild = "^2024.10.3"
-sphinx-markdown-builder = "^0.6.8"
-sphinx-book-theme = "^1.1.4"
-sphinx-autodoc-typehints = "^3.1.0"
+sphinx = "*"
+sphinx-rtd-theme = "*"
+sphinx-autobuild = "*"
+sphinx-markdown-builder = "*"
+sphinx-book-theme = "*"
+sphinx-autodoc-typehints = "*"
+sphinxcontrib-programoutput = "*"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^8.3.5"

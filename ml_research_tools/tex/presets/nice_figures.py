@@ -14,6 +14,7 @@ def golden_figure(
     ratio=1.6180339887,
     figsize=None,
     layout="constrained",
+    dpi=72,
     **kwargs,
 ) -> tuple[matplotlib.figure.Figure, matplotlib.axes.Axes]:
     """
@@ -41,6 +42,7 @@ def golden_figure(
         colwidth=colwidth,
         ratio=ratio,
         layout=layout,
+        dpi=dpi,
         **kwargs,
     )
     if isinstance(axs, np.ndarray):
@@ -55,6 +57,7 @@ def golden_subplots(
     ratio=1.6180339887,
     figsize=None,
     layout="constrained",
+    dpi=72,
     **kwargs,
 ) -> tuple[matplotlib.figure.Figure, np.ndarray]:
     """
@@ -75,4 +78,4 @@ def golden_subplots(
             colwidth * ncols,
             colwidth / ratio * nrows,
         )  # width, height in inches
-    return plt.subplots(nrows=nrows, ncols=ncols, figsize=figsize, layout=layout, **kwargs)
+    return plt.subplots(nrows=nrows, ncols=ncols, figsize=figsize, layout=layout, dpi=dpi, **kwargs)

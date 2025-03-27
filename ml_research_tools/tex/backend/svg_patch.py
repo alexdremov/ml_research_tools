@@ -2,7 +2,7 @@ import codecs
 import logging
 import math
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import numpy as np
 from matplotlib import cbook
@@ -17,7 +17,6 @@ logger = logging.getLogger(__name__)
 
 
 def replace_texcmd(s):
-    """Replace the \\mathdefault commands in mtext string"""
     s = s.replace(r"\mathdefault", "").replace("\u2212", "-")
     return s
 
@@ -87,11 +86,12 @@ def transform_text_between_dollars(text, transform_func):
 
 @dataclass
 class SvgInkConfig:
-    ignore_font_size: bool = False
-    ignore_weight: bool = False
-    ignore_color: bool = False
-    ignore_alpha: bool = False
-    ignore_style: bool = False
+    ignore_font_size: bool = field(default=False, metadata={"help": "Ignore font size"})
+    ignore_weight: bool = field(default=False, metadata={"help": "Ignore font weight"})
+    ignore_color: bool = field(default=False, metadata={"help": "Ignore text color"})
+    ignore_alpha: bool = field(default=False, metadata={"help": "Ignore alpha channel"})
+    ignore_style: bool = field(default=False, metadata={"help": "Ignore italic and oblique styles"})
+    font_scale: float = field(default=1.0, metadata={"help": "Scale factor for font size"})
 
 
 _config = SvgInkConfig()
@@ -106,39 +106,39 @@ class RendererInkSVG(RendererSVG):
         color = rgb2hex(gc.get_rgb())
         if color != "#000000" and not _config.ignore_color:
             color = color.lstrip("#").upper()
-            color = f"\\color[HTML]{{{color}}}"
+            color = r"\color[HTML]{" + color + "}"
             final_tex_text = "{" + color + s + "}"
 
         alpha = gc.get_alpha() if gc.get_forced_alpha() else gc.get_rgb()[3]
         if alpha != 1 and not _config.ignore_alpha:
-            alpha = f"\\transparent{{{alpha}}}"
+            alpha = r"\transparent{" + str(alpha) + "}"
             final_tex_text = "{" + alpha + s + "}"
 
         # Separate font style in their separate attributes
         if _config.ignore_style:
             pass
         elif prop.get_style() == "italic":
-            final_tex_text = "{" + "\\emph{" + final_tex_text + "}" + "}"
+            final_tex_text = r"\emph{" + final_tex_text + "}"
         elif prop.get_style() == "oblique":
-            final_tex_text = "{" + "\\textsl{" + final_tex_text + "}" + "}"
+            final_tex_text = r"\textsl{" + final_tex_text + "}"
 
         if prop.get_variant() != "normal":
             logger.warning("variant not supported in SVG backend")
 
         weight = fm.weight_dict[prop.get_weight()]
         if weight > 400 and not _config.ignore_weight:
-            final_tex_text = "{" + "\\textbf{" + final_tex_text + "}" + "}"
-            f = lambda x: "\\bm{" + x + "}"
+            final_tex_text = r"\textbf{" + final_tex_text + "}"
+            f = lambda x: r"\bm{" + x + "}"
             final_tex_text = transform_text_between_dollars(final_tex_text, f)
 
         if not _config.ignore_font_size:
-            font_size = _short_float_fmt(math.floor(prop.get_size() * 0.75))
-            lineheight = _short_float_fmt(math.floor(prop.get_size() * 0.75 * 1.2))
-            font_size_modifier = f"\\fontsize{{{font_size}}}{{{lineheight}}}\selectfont"
+            scale = _config.font_scale
+            font_size = _short_float_fmt(math.floor(prop.get_size() * scale))
+            lineheight = _short_float_fmt(math.floor(prop.get_size() * scale * 1.2))
+            font_size_modifier = (
+                r"\fontsize{" + str(font_size) + "}{" + str(lineheight) + r"}\selectfont"
+            )
             final_tex_text = "{" + font_size_modifier + " " + final_tex_text + "}"
-
-        if prop.get_stretch() != "normal":
-            logger.warning("stretch not supported in SVG backend")
 
         attrib = {}
         font_style = {}
@@ -202,45 +202,15 @@ class RendererInkSVG(RendererSVG):
 
 
 class FigureCanvasInkSVG(FigureCanvasSVG):
+    fixed_dpi = None
+
     def print_svg(self, filename, *, bbox_inches_restore=None, metadata=None, **kwargs):
-        """
-        Parameters
-        ----------
-        filename : str or path-like or file-like
-            Output target; if a string, a file will be opened for writing.
-
-        metadata : dict[str, Any], optional
-            Metadata in the SVG file defined as key-value pairs of strings,
-            datetimes, or lists of strings, e.g., ``{'Creator': 'My software',
-            'Contributor': ['Me', 'My Friend'], 'Title': 'Awesome'}``.
-
-            The standard keys and their value types are:
-
-            * *str*: ``'Coverage'``, ``'Description'``, ``'Format'``,
-              ``'Identifier'``, ``'Language'``, ``'Relation'``, ``'Source'``,
-              ``'Title'``, and ``'Type'``.
-            * *str* or *list of str*: ``'Contributor'``, ``'Creator'``,
-              ``'Keywords'``, ``'Publisher'``, and ``'Rights'``.
-            * *str*, *date*, *datetime*, or *tuple* of same: ``'Date'``. If a
-              non-*str*, then it will be formatted as ISO 8601.
-
-            Values have been predefined for ``'Creator'``, ``'Date'``,
-            ``'Format'``, and ``'Type'``. They can be removed by setting them
-            to `None`.
-
-            Information is encoded as `Dublin Core Metadata`__.
-
-            .. _DC: https://www.dublincore.org/specifications/dublin-core/
-
-            __ DC_
-        """
         with cbook.open_file_cm(filename, "w", encoding="utf-8") as fh:
             if not cbook.file_requires_unicode(fh):
                 fh = codecs.getwriter("utf-8")(fh)
             dpi = self.figure.dpi
-            self.figure.dpi = 72
             width, height = self.figure.get_size_inches()
-            w, h = width * 72, height * 72
+            w, h = width * dpi, height * dpi
             renderer = MixedModeRenderer(
                 self.figure,
                 width,
