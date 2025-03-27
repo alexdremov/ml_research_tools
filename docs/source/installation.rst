@@ -73,7 +73,7 @@ Requirements
 
 ML Research Tools requires:
 
-* Python 3.11 or later
+* Python 3.10 or later
 * Poetry for dependency management
 
 Optional Dependencies
