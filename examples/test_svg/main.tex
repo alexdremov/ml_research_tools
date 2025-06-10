@@ -1,0 +1,44 @@
+%!LW recipe=pdflatex
+
+\documentclass{article}
+
+% Load the svg package
+\usepackage[left=2.5cm,right=2.5cm,top=2.5cm,bottom=3.4cm]{geometry}
+\usepackage{graphicx}
+\usepackage[inkscapearea=nocrop]{svg}
+\usepackage{amsmath}
+\usepackage{bm}
+\usepackage{ifthen}
+\usepackage{helvet}
+\usepackage{kantlipsum}
+
+\graphicspath{{./images/}} % Set the path for SVG images
+
+\makeatletter
+\newcommand{\showfont}{encoding: \f@encoding{},
+  family: \f@family{},
+  series: \f@series{},
+  shape: \f@shape{},
+  size: \f@size{}
+}
+
+\newcommand{\iffont}[3]{\ifthenelse{\equal{\f@family}{#1}}{#2}{#3}}
+\makeatother
+
+\begin{document}
+\section{Including SVG with the svg Package}
+
+\showfont
+
+\begin{figure}[h]
+  \centering
+  \fbox{
+  \includesvg[width=3.625in]{test.svg}
+  }
+\end{figure}
+
+% You can also specify height, scale or other options
+% \includesvg[height=2in]{my_image}
+% \includesvg[scale=1.25]{my_image}
+
+\end{document}

@@ -1,0 +1,6 @@
+.deps
+svg-inkscape
+main.*
+!main.tex
+!main.pdf
+.vscode
