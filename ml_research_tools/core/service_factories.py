@@ -40,6 +40,7 @@ def register_common_services(
             config=config,
             preset=default_llm_preset,
             tier=default_llm_tier,
+            redis_cache=service_provider.get("redis_cache"),
         ),
     )
 
@@ -47,14 +48,23 @@ def register_common_services(
     for preset_name in config.llm_presets.presets:
         service_provider.register_factory(
             f"llm_client.{preset_name}",
-            lambda name=preset_name: create_llm_client(config=config, preset=name),
+            lambda name=preset_name: create_llm_client(
+                config=config,
+                preset=name,
+                redis_cache=service_provider.get("redis_cache"),
+            ),
         )
 
     # Register factories for each LLM tier
     tiers = set(preset.tier for preset in config.llm_presets.presets.values())
     for tier in tiers:
         service_provider.register_factory(
-            f"llm_client_tier.{tier}", lambda t=tier: create_llm_client(config=config, tier=t)
+            f"llm_client_tier.{tier}",
+            lambda t=tier: create_llm_client(
+                config=config,
+                tier=t,
+                redis_cache=service_provider.get("redis_cache"),
+            )
         )
 
 

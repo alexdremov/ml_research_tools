@@ -282,6 +282,17 @@ class WandbDownloaderTool(BaseTool):
         # Get current last heartbeat time from W&B run
         current_last_heartbeat_time = run.heartbeatAt
 
+        run_info = {
+            "id": run.id,
+            "name": run.name,
+            "config": run.config,
+            "tags": run.tags,
+            "url": run.url,
+            "state": run.state,
+            "notes": run.notes,
+            "summary": run.summary._json_dict if hasattr(run.summary, "_json_dict") else {},
+        }
+
         # Check if the file already exists to avoid redundant downloads
         if os.path.exists(filepath):
             try:
@@ -291,6 +302,9 @@ class WandbDownloaderTool(BaseTool):
 
                 # Skip updating if last heartbeat time hasn't changed
                 if existing_last_heartbeat_time == current_last_heartbeat_time:
+                    existing_data[0]["run_info"] = run_info
+                    with open(filepath, "w") as f:
+                        json.dump(existing_data, f, indent=4)
                     return
             except (json.JSONDecodeError, IndexError, KeyError) as e:
                 self.logger.warning(f"Error reading existing file {filepath}: {e}. Will overwrite.")
@@ -310,11 +324,7 @@ class WandbDownloaderTool(BaseTool):
 
         # Add last heartbeat time and run info to history[0]
         history_dict[0]["last_heartbeat_time"] = current_last_heartbeat_time
-        history_dict[0]["run_info"] = {
-            "id": run.id,
-            "name": run.name,
-            "config": run.config,
-        }
+        history_dict[0]["run_info"] = run_info
 
         # Save the dictionary as a JSON file
         try:

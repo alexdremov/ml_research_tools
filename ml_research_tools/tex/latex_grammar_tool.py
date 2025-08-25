@@ -55,6 +55,63 @@ DEFAULT_CONFIG = {
             - Do not add any new LaTeX commands at all costs, even if syntax or structure are incorrect
             - All newline characters must be preserved in their original positions
             - Return only the edited text without any explanations or comments
+            - Pay specific attention to \\begin{{document}} and \\end{{document}} — they must be always kept as-is
+
+            Text to edit:
+
+            ```
+            {text}
+            ```
+            """
+        ),
+        "system_rewrite": textwrap.dedent(
+            """\
+            You are a LaTeX formatter.
+            Your only task is to add **single newlines (\\n)** for readability.
+
+            ### Rules:
+            1. Never insert two consecutive newlines.
+            2. Do not break LaTeX commands or math environments.
+            3. Do not modify or remove text, spacing, or commands.
+            4. Only insert single newlines where appropriate.
+
+            ### Good places for newlines:
+            - After section headers (`\\section{{}}`, `\\subsection{{}}`, etc.)
+            - Before/after display math (`\\begin{{equation}}`, `$$`)
+            - Before `\\begin{{}}` and after `\\end{{}}`
+            - After `\\item` in lists
+            - After sentence ends (and there is no new line already)
+            - After comma in a long enumeration list
+            - To keep lines under ~120 characters
+            - Just between words if needed to fit 120 characters limit
+
+            ### Output:
+            Return only the updated LaTeX text with readability improvements. Nothing else.
+            """
+        ),
+        "user_rewrite": textwrap.dedent(
+            """\
+            You are a LaTeX formatter.
+            Your only task is to add **single newlines (\\n)** for readability.
+
+            ### Rules:
+            1. Never insert two consecutive newlines.
+            2. Do not break LaTeX commands or math environments.
+            3. Do not modify or remove text, spacing, or commands.
+            4. Only insert single newlines where appropriate.
+
+            ### Good places for newlines:
+            - After section headers (`\\section{{}}`, `\\subsection{{}}`, etc.)
+            - Before/after display math (`\\begin{{equation}}`, `$$`)
+            - Before `\\begin{{}}` and after `\\end{{}}`
+            - After `\\item` in lists
+            - After sentence ends (and there is no new line already)
+            - After comma in a long enumeration list
+            - To keep lines under ~120 characters
+            - Just between words if needed to fit 120 characters limit
+
+            ### Output:
+            Return only the updated LaTeX text with readability improvements. Nothing else.
 
             Text to edit:
 
@@ -99,8 +156,7 @@ class LatexGrammarTool(BaseTool):
         group.add_argument("--user-prompt", help="Override user prompt template")
         group.add_argument("--max-words", type=int, help="Maximum words per chunk")
 
-        # Note: The global parser already adds --llm-preset and --llm-tier options
-        # These values will be used automatically by the LLM functions
+        group.add_argument("--no-words-regroup", action="store_true", help="Do not split lines for readability")
 
     def execute(self, config: Config, args: argparse.Namespace) -> int:
         """
@@ -125,9 +181,6 @@ class LatexGrammarTool(BaseTool):
 
         if args.max_words:
             self.tool_config["api"]["max_words_per_chunk"] = args.max_words
-
-        # Get Redis cache from service provider
-        redis_cache = self.services.get_typed("redis_cache", RedisCache)
 
         # Determine output file path
         input_file = args.input_file
@@ -176,13 +229,22 @@ class LatexGrammarTool(BaseTool):
                     system_prompt=self.tool_config["prompts"]["system"],
                     prefix="latex_grammar",
                 )
-
                 improved_chunk = self.post_process_chunk(improved_chunk)
+                if not args.no_words_regroup:
+                    improved_chunk = llm_client.simple_call(
+                        text=self.tool_config["prompts"]["user_rewrite"].format(text=improved_chunk),
+                        system_prompt=self.tool_config["prompts"]["system_rewrite"],
+                        prefix="latex_split",
+                    )
+                    improved_chunk = self.post_process_chunk(improved_chunk)
+
                 improved_chunks.append(improved_chunk)
                 progress.update(task_id, advance=1)
 
+
         # Combine improved chunks
         improved_text = "\n\n".join(improved_chunks)
+
 
         # Save improved text
         with open(output_file, "w") as file:
