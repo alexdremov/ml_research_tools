@@ -56,6 +56,8 @@ DEFAULT_CONFIG = {
             - All newline characters must be preserved in their original positions
             - Return only the edited text without any explanations or comments
             - Pay specific attention to \\begin{{document}} and \\end{{document}} — they must be always kept as-is
+            - Use - (known as an hyphen) between the elements of compound words, -- (known as an en-dash) for ranges (for example, "3–7" means "3 to 7"), --- (known as a em-dash) punctuation for digressions in a sentence
+            - Make sure all \\section, \\subsection, \\header, ... are correct title-case.
 
             Text to edit:
 
@@ -109,6 +111,7 @@ DEFAULT_CONFIG = {
             - After comma in a long enumeration list
             - To keep lines under ~120 characters
             - Just between words if needed to fit 120 characters limit
+            - Keep Latex environments identation and content as-is
 
             ### Output:
             Return only the updated LaTeX text with readability improvements. Nothing else.

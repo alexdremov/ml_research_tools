@@ -1,0 +1,32 @@
+version = 1
+revision = 3
+requires-python = ">=3.10"
+
+[[package]]
+name = "bibtexparser"
+version = "2.0.0b3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pylatexenc" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/2e/8f/48d3096033e1ec716599539e024f2940153e6d0febfcb30947e23977e397/bibtexparser-2.0.0b3.tar.gz", hash = "sha256:be20779cd954a01c5c627a8853c6c243bccf7b15845dd0a6c8749d321c4e8af1", size = 35447, upload-time = "2023-09-21T11:48:09.533Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/87/ae/72fd31d139460fdec7a0c03b1ccc3f7bc89f9430ef81a856be41f039848b/bibtexparser-2.0.0b3-py3-none-any.whl", hash = "sha256:c140145e0aef0a45f5bdcdb1b750ffb69b5fe4a8b1a1d2502811ed3aaceb32c0", size = 37450, upload-time = "2023-09-21T11:48:07.749Z" },
+]
+
+[[package]]
+name = "ml-research-tools"
+version = "1.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "bibtexparser" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "bibtexparser", specifier = "==2.0.0b3" }]
+
+[[package]]
+name = "pylatexenc"
+version = "2.10"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/5d/ab/34ec41718af73c00119d0351b7a2531d2ebddb51833a36448fc7b862be60/pylatexenc-2.10.tar.gz", hash = "sha256:3dd8fd84eb46dc30bee1e23eaab8d8fb5a7f507347b23e5f38ad9675c84f40d3", size = 162597, upload-time = "2021-04-06T07:56:07.854Z" }

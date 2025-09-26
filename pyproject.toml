@@ -18,6 +18,9 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
+dependencies = [
+    "bibtexparser==2.0.0b3",
+]
 
 [project.urls]
 Documentation = "https://alexdremov.github.io/ml_research_tools/"

@@ -2,6 +2,7 @@ import itertools
 import os
 import re
 import json
+import numpy as np
 from tqdm.auto import tqdm
 from collections import defaultdict
 
@@ -27,7 +28,7 @@ class ExperimentStore:
     def get_experiment(self, file_name):
         return self.experiments.get(file_name)
 
-    def search(self, name=None, tags=None, exclude_tags=None, states={'finished'}):
+    def search(self, name=None, task_id=None, tags=None, exclude_tags=None, states={'finished'}):
         all_runs = set(list(self.experiments.keys()))
 
         runs_tags = all_runs
@@ -49,13 +50,20 @@ class ExperimentStore:
                 if self.run_info(v)['state'] in states
             )
 
+        runs_task_id = all_runs
+        if task_id is not None:
+            runs_task_id = set(
+                k for k, v in self.experiments.items()
+                if self.run_info(v)['id'] == task_id
+            )
+
         set_excluded= set(exclude_tags or [])
         runs_excluded = set(
                 k for k, v in self.experiments.items()
                 if len(set(self.run_info(v)['tags'] or []) & set_excluded) > 0
             )
 
-        total_runs = (runs_tags & runs_names & runs_states) - runs_excluded
+        total_runs = (runs_tags & runs_names & runs_states & runs_task_id) - runs_excluded
         return [
             self.experiments[run] for run in total_runs
         ]
@@ -67,6 +75,10 @@ class ExperimentStore:
     @property
     def all_states(self):
         return set(self.run_info(run)['state'] for run in self.experiments.values())
+
+    @property
+    def all_task_ids(self):
+        return set(self.run_info(run)['id'] for run in self.experiments.values())
 
     @staticmethod
     def run_info(run):
@@ -83,9 +95,11 @@ class ExperimentStore:
 
     @staticmethod
     def merge_runs(runs):
+        if len(runs) == 0:
+            return None
         last_run = max(
             runs,
-            key=lambda x: max(i.get('_timestamp', 0) for i in x)
+            key=lambda x: max([i.get('_timestamp', 0) for i in x] or [0])
         )
         run_info = ExperimentStore.run_info(last_run)
         merged = []
@@ -98,7 +112,7 @@ class ExperimentStore:
                 }
                 for i in run
             )
-        merged.sort(key=lambda x: x['_timestamp'])
+        merged.sort(key=lambda x: x.get('_timestamp', 0))
         merged[0]['run_info'] = run_info
         return merged
 
@@ -152,3 +166,25 @@ class ExperimentStore:
         if merge:
             grouped = {k: ExperimentStore.merge_runs(v) for k, v in grouped.items()}
         return list(grouped.values())
+
+    @staticmethod
+    def extract(run, fields, ensure_present=True):
+        if run is None:
+            return []
+        fields = list(set(fields))
+        result = []
+        for entry in run:
+            row = dict()
+            for field in fields:
+                value = entry.get(field)
+                if value is None or value is float('nan') or value == 'nan' or np.isnan(value):
+                    continue
+
+                row[field] = value
+
+            if len(row) == len(fields) or not ensure_present:
+                result.append(row)
+
+        return result
+
+
