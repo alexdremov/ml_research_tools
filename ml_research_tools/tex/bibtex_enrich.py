@@ -55,12 +55,16 @@ class BibtexEnrichTool(BaseTool):
             query = entry["title"]
             found = make_search_request(query)
             if found is None:
-                result.append(bibtexparser.dumps(entry))
+                tmp_db = bibtexparser.bibdatabase.BibDatabase()
+                tmp_db.entries = [entry]
+                result.append(bibtexparser.dumps(tmp_db))
                 self.logger.warning(f"Did not find info about {query}")
                 continue
             found = found["result"]["hits"]
             if found is None or len(found) == 0 or "hit" not in found:
-                result.append(bibtexparser.dumps(entry))
+                tmp_db = bibtexparser.bibdatabase.BibDatabase()
+                tmp_db.entries = [entry]
+                result.append(bibtexparser.dumps(tmp_db))
                 self.logger.warning(f"Did not find info about {query}")
                 continue
 
@@ -75,7 +79,9 @@ class BibtexEnrichTool(BaseTool):
                 self.logger.warning(
                     f"Title mismatch for {query}: {parsed.entries[0]['title']} != {entry['title']}"
                 )
-                result.append(bibtexparser.dumps(entry))
+                tmp_db = bibtexparser.bibdatabase.BibDatabase()
+                tmp_db.entries = [entry]
+                result.append(bibtexparser.dumps(tmp_db))
                 continue
 
             parsed_entry["ID"] = entry["ID"]
