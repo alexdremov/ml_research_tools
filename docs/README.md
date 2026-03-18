@@ -8,13 +8,13 @@ To build the documentation locally:
 
 1. Install the package with documentation dependencies:
    ```bash
-   poetry install --with docs
+   uv sync --group docs
    ```
 
 2. Build the HTML documentation:
    ```bash
    cd docs
-   poetry run make html
+   uv run make html
    ```
 
 3. Open the built documentation:
@@ -36,4 +36,5 @@ To build the documentation locally:
 
 The documentation is automatically built and deployed to GitHub Pages when changes are pushed to the main branch.
 
-The latest version of the documentation can be accessed at: https://alexdremov.github.io/ml_research_tools/ 
+The latest version of the documentation can be accessed at: https://alexdremov.github.io/ml_research_tools/
+ 

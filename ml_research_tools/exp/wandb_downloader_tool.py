@@ -8,12 +8,17 @@ import json
 import logging
 import os
 import re
-from typing import Set
+from typing import TYPE_CHECKING, Any, Set
 
-import wandb
+if TYPE_CHECKING:
+    import wandb
+    from wandb.apis.public.runs import Run as WandbRun
+    from wandb.apis.public.runs import Runs as WandbRuns
+else:
+    WandbRun = Any
+    WandbRuns = Any
+
 from rich.panel import Panel
-from wandb.apis.public.runs import Run as WandbRun
-from wandb.apis.public.runs import Runs as WandbRuns
 
 from ml_research_tools.core.base_tool import BaseTool
 
@@ -94,6 +99,8 @@ class WandbDownloaderTool(BaseTool):
             quiet: If True, suppress progress bar
             delete_outdated: If True, delete logs for runs that no longer exist
         """
+        import wandb
+
         # Initialize the W&B API
         self.logger.info(f"Initializing W&B API for {entity}/{project}")
         try:
@@ -325,6 +332,11 @@ class WandbDownloaderTool(BaseTool):
         # Add last heartbeat time and run info to history[0]
         history_dict[0]["last_heartbeat_time"] = current_last_heartbeat_time
         history_dict[0]["run_info"] = run_info
+
+        for entry in history_dict:
+            if "_step" in entry:
+                entry.setdefault("step", entry["_step"])
+                entry.setdefault("iteration", entry["_step"])
 
         # Save the dictionary as a JSON file
         try:

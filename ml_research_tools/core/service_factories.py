@@ -64,7 +64,7 @@ def register_common_services(
                 config=config,
                 tier=t,
                 redis_cache=service_provider.get("redis_cache"),
-            )
+            ),
         )
 
 

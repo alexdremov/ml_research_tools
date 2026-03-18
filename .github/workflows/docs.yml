@@ -19,26 +19,22 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Install poetry
-        run: pipx install poetry
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
 
       - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-          cache: 'poetry'
+        run: uv python install 3.11
 
       - name: Install dependencies
-        run: |
-          poetry env use 3.11
-          eval $(poetry env activate)
-          poetry install --all-groups --all-extras
-          poetry sync
+        run: uv sync --all-groups --all-extras
 
       - name: Build documentation
         run: |
           cd docs
-          poetry run make html
+          uv run make html
 
       - name: Setup Pages
         if: github.event_name != 'pull_request'

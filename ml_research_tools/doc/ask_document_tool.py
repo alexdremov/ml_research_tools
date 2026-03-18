@@ -16,40 +16,34 @@ from pathlib import Path
 from typing import Optional
 from urllib.parse import urlparse
 
-from openai.types.chat.chat_completion import ChatCompletion
 from rich.console import Console
 from rich.highlighter import ReprHighlighter
 from rich.panel import Panel
 from rich.prompt import Prompt
 from rich.theme import Theme
 
-try:
-    import requests
 
-    REQUESTS_AVAILABLE = True
-except ImportError:
-    REQUESTS_AVAILABLE = False
+def _has_module(name: str) -> bool:
+    import importlib.util
 
-try:
-    from bs4 import BeautifulSoup
+    return importlib.util.find_spec(name) is not None
 
-    BS4_AVAILABLE = True
-except ImportError:
-    BS4_AVAILABLE = False
 
-try:
-    import PyPDF2
+def has_requests() -> bool:
+    return _has_module("requests")
 
-    PDF_SUPPORT = True
-except ImportError:
-    PDF_SUPPORT = False
 
-try:
-    import tiktoken
+def has_bs4() -> bool:
+    return _has_module("bs4")
 
-    TIKTOKEN_AVAILABLE = True
-except ImportError:
-    TIKTOKEN_AVAILABLE = False
+
+def has_pypdf2() -> bool:
+    return _has_module("PyPDF2")
+
+
+def has_tiktoken() -> bool:
+    return _has_module("tiktoken")
+
 
 from ml_research_tools.cache import RedisCache, cached, generate_cache_key
 from ml_research_tools.core.base_tool import BaseTool
@@ -148,7 +142,7 @@ class PDFDocumentParser(DocumentParser):
     @classmethod
     def can_handle(cls, file_path: str) -> bool:
         """Check if this parser can handle the given file type."""
-        if not PDF_SUPPORT:
+        if not has_pypdf2():
             return False
         ext = Path(file_path).suffix.lower()
         return ext == ".pdf"
@@ -156,8 +150,9 @@ class PDFDocumentParser(DocumentParser):
     @classmethod
     def extract_content(cls, file_path: str) -> str:
         """Extract text content from PDF files."""
-        if not PDF_SUPPORT:
+        if not has_pypdf2():
             raise RuntimeError("PDF support is not available. Install PyPDF2 package.")
+        import PyPDF2
 
         try:
             text = ""
@@ -178,7 +173,7 @@ class URLParser(DocumentParser):
     @classmethod
     def can_handle(cls, file_path: str) -> bool:
         """Check if this parser can handle the given URL."""
-        if not REQUESTS_AVAILABLE:
+        if not has_requests():
             return False
 
         # Check if the input looks like a URL
@@ -191,10 +186,11 @@ class URLParser(DocumentParser):
     @classmethod
     def extract_content(cls, url: str) -> str:
         """Extract content from a URL (webpage or downloadable file)."""
-        if not REQUESTS_AVAILABLE:
+        if not has_requests():
             raise RuntimeError(
                 "URL support requires the 'requests' package. Please install it first."
             )
+        import requests
 
         logger.info(f"Fetching content from URL: {url}")
 
@@ -206,7 +202,7 @@ class URLParser(DocumentParser):
 
             # Handle PDF files
             if "application/pdf" in content_type:
-                if not PDF_SUPPORT:
+                if not has_pypdf2():
                     raise RuntimeError(
                         "PDF parsing requires the PyPDF2 package. Please install it first."
                     )
@@ -248,6 +244,8 @@ class URLParser(DocumentParser):
     @classmethod
     def _extract_pdf_content(cls, file_path: str) -> str:
         """Extract text from a PDF file."""
+        import PyPDF2
+
         text = ""
         with open(file_path, "rb") as file:
             reader = PyPDF2.PdfReader(file)
@@ -259,7 +257,9 @@ class URLParser(DocumentParser):
     @classmethod
     def _extract_html_content(cls, html_content: str, url: str) -> str:
         """Extract text content from HTML."""
-        if BS4_AVAILABLE:
+        if has_bs4():
+            from bs4 import BeautifulSoup
+
             # Use BeautifulSoup for better HTML parsing if available
             soup = BeautifulSoup(html_content, "html.parser")
 
@@ -632,6 +632,8 @@ class DocumentChat:
 
     def stream_llm_response(self) -> str:
         """Stream the LLM response and return the complete response."""
+        from openai.types.chat.chat_completion import ChatCompletion
+
         try:
             # Generate API parameters with the appropriate preset/tier
             params = generate_completion_params(
@@ -652,7 +654,6 @@ class DocumentChat:
 
             # Simply print each chunk as it comes in without the panel to prevent truncation
             self.console.print("\n[bold blue]Assistant:[/bold blue] ", end="")
-
             if not isinstance(response, ChatCompletion):
                 for chunk in response:
                     content = chunk.choices[0].delta.content or ""

@@ -2,12 +2,10 @@
 name = "ml_research_tools"
 version = "1.1.0"
 description = "A collection of tools for machine learning research, including experiment management, Kubernetes utilities, and LaTeX processing."
-authors = [
-    {name = "alexdremov", email = "dremov.me@gmail.com"}
-]
-readme = "README.md"
+authors = [{ name = "alexdremov", email = "dremov.me@gmail.com" }]
 requires-python = ">=3.10"
-license = {text = "MIT"}
+readme = "README.md"
+license = { text = "MIT" }
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
@@ -19,7 +17,30 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 dependencies = [
-    "bibtexparser==2.0.0b3",
+    "typer>=0.15.2,<0.16",
+    "typer-cli>=0.15.2,<0.16",
+    "typing-extensions>=4.12.2,<5",
+    "rich>=13.9.4,<14",
+    "wandb>=0.19.8,<0.20",
+    "tqdm>=4.67.1,<5",
+    "tiktoken>=0.9.0,<0.10",
+    "tenacity>=9.0.0,<10",
+    "redis>=5.2.1,<6",
+    "pyyaml>=6.0.2,<7",
+    "openai>=2.0.0,<3",
+    "numpy>=2.2.4,<3",
+    "pandas>=2.2.3,<3",
+    "pypdf2>=3.0.1",
+    "rich-argparse>=1.7.0,<2",
+    "configparser>=7.2.0,<8",
+    "matplotlib>=3.10.1,<4",
+    "openreview-py>=1.52.9,<2",
+    "joblib>=1.5.2",
+    "fitz>=0.0.1.dev2",
+    "pymupdf>=1.26.5",
+    "bibtexparser>=1.4.3",
+    "plumbum>=1.10.0",
+    "requests>=2.32.5",
 ]
 
 [project.urls]
@@ -27,54 +48,44 @@ Documentation = "https://alexdremov.github.io/ml_research_tools/"
 Repository = "https://github.com/alexdremov/ml_research_tools"
 "Bug Tracker" = "https://github.com/alexdremov/ml_research_tools/issues"
 
+[project.scripts]
+ml_research_tools = "ml_research_tools.__main__:main"
+mlrt = "ml_research_tools.__main__:main"
+
 [project.entry-points."matplotlib.backend"]
 svglatex = "ml_research_tools.tex.backend"
 
-[tool.poetry]
+[dependency-groups]
+dev = [
+    "black>=25.1.0,<26",
+    "isort>=6.0.1,<7",
+    "mypy>=1.9.0,<2",
+    "pytest>=8.0.0,<9",
+    "pytest-cov>=4.1.0,<5",
+    "ruff>=0.2.2,<0.3",
+    "jupyterlab>=4.3.6,<5",
+]
+docs = [
+    "sphinx",
+    "sphinx-rtd-theme",
+    "sphinx-autobuild",
+    "sphinx-markdown-builder",
+    "sphinx-book-theme",
+    "sphinx-autodoc-typehints",
+    "sphinxcontrib-programoutput",
+]
+test = ["pytest>=8.3.5,<9"]
 
-[tool.poetry.dependencies]
-python = "^3.10"
-typer = "^0.15.2"
-typer-cli = "^0.15.2"
-typing-extensions = "^4.12.2"
-rich = "^13.9.4"
-wandb = "^0.19.8"
-tqdm = "^4.67.1"
-tiktoken = "^0.9.0"
-tenacity = "^9.0.0"
-redis = "^5.2.1"
-pyyaml = "^6.0.2"
-openai = "^1.68.2"
-numpy = "^2.2.4"
-pandas = "^2.2.3"
-pypdf2 = ">=3.0.1"
-rich-argparse = "^1.7.0"
-configparser = "^7.2.0"
-matplotlib = "^3.10.1"
+[tool.uv]
+default-groups = [
+    "dev",
+    "docs",
+    "test",
+]
 
-[tool.poetry.group.dev.dependencies]
-black = "^25.1.0"
-isort = "^6.0.1"
-mypy = "^1.9.0"
-pytest = "^8.0.0"
-pytest-cov = "^4.1.0"
-ruff = "^0.2.2"
-jupyterlab = "^4.3.6"
-
-[tool.poetry.group.docs.dependencies]
-sphinx = "*"
-sphinx-rtd-theme = "*"
-sphinx-autobuild = "*"
-sphinx-markdown-builder = "*"
-sphinx-book-theme = "*"
-sphinx-autodoc-typehints = "*"
-sphinxcontrib-programoutput = "*"
-
-[tool.poetry.group.test.dependencies]
-pytest = "^8.3.5"
-
-[tool.poetry.scripts]
-ml_research_tools = "ml_research_tools.__main__:main"
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.ruff]
 select = ["E", "F", "I"]
@@ -94,7 +105,3 @@ warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
-
-[build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
-build-backend = "poetry.core.masonry.api"
