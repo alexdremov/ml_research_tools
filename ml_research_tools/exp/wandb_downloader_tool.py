@@ -279,6 +279,8 @@ class WandbDownloaderTool(BaseTool):
             run: W&B run object
             output_dir: Directory where the log file will be saved
         """
+        run.load_full_data()
+
         # Sanitize the run name for use in filenames
         sanitized_name = self.sanitize_filename(run.name)
 
@@ -311,7 +313,7 @@ class WandbDownloaderTool(BaseTool):
                 if existing_last_heartbeat_time == current_last_heartbeat_time:
                     existing_data[0]["run_info"] = run_info
                     with open(filepath, "w") as f:
-                        json.dump(existing_data, f, indent=4)
+                        json.dump(existing_data, f, indent=4, sort_keys=True)
                     return
             except (json.JSONDecodeError, IndexError, KeyError) as e:
                 self.logger.warning(f"Error reading existing file {filepath}: {e}. Will overwrite.")
@@ -341,6 +343,6 @@ class WandbDownloaderTool(BaseTool):
         # Save the dictionary as a JSON file
         try:
             with open(filepath, "w") as f:
-                json.dump(history_dict, f, indent=4)
+                json.dump(history_dict, f, indent=4, sort_keys=True)
         except Exception as e:
             self.logger.error(f"Failed to save log file {filepath}: {e}")
