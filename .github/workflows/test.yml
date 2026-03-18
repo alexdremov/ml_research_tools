@@ -18,29 +18,23 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Install poetry
-        run: pipx install poetry
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
         with:
           python-version: ${{ matrix.python-version }}
-          cache: 'poetry'
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
 
       - name: Install dependencies
-        run: |
-          poetry env use ${{ matrix.python-version }}
-          poetry install --all-groups --all-extras
-          poetry sync
+        run: uv sync --all-groups --all-extras
 
       # - name: Run tests
       #   run: |
-      #     poetry run pytest
+      #     uv run pytest
 
       - name: Check code quality
         run: |
-          poetry env use ${{ matrix.python-version }}
-          poetry run black --check .
-          poetry run isort --check .
-          # poetry run mypy .
-          # poetry run ruff check .
+          uv run black --check .
+          uv run isort --check .
+          # uv run mypy .
+          # uv run ruff check .

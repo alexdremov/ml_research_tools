@@ -12,22 +12,16 @@ jobs:
       with:
         fetch-depth: 0  # Required for proper versioning
 
-    - name: Install poetry
-      run: pipx install poetry
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        enable-cache: true
+        cache-dependency-glob: "uv.lock"
 
     - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
-        cache: 'poetry'
-
-    - name: Configure Poetry
-      run: |
-        poetry config pypi-token.pypi ${{ secrets.PYPI_API_TOKEN }}
+      run: uv python install 3.11
 
     - name: Build and publish
       run: |
-        poetry install --all-groups --all-extras
-        poetry sync
-        poetry build
-        poetry publish --no-interaction
+        uv build
+        uv publish --token ${{ secrets.PYPI_API_TOKEN }}

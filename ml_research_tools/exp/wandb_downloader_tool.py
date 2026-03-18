@@ -99,6 +99,8 @@ class WandbDownloaderTool(BaseTool):
             quiet: If True, suppress progress bar
             delete_outdated: If True, delete logs for runs that no longer exist
         """
+        import wandb
+
         # Initialize the W&B API
         self.logger.info(f"Initializing W&B API for {entity}/{project}")
         try:

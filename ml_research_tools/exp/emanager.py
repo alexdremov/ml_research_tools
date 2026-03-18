@@ -1187,9 +1187,17 @@ class ExpManagerTool(BaseTool):
         lines = []
         if tag is None:
             lines.append("## 🧪 Experiment Tracker\n")
+
+            lines.append("### 🚀 Quick Start")
+            lines.append("```bash")
+            lines.append("mlrt emanager create <new-exp>  # Start a new experiment")
+            lines.append("mlrt emanager switch <exp>      # Switch to an existing experiment")
+            lines.append("mlrt emanager list              # List all experiments")
+            lines.append("```\n")
+
             experiments = metadata.get("experiments", {})
             if experiments:
-                lines.append("### Experiments\n")
+                lines.append("### 📊 Experiments\n")
                 lines.append("| Tag | Parent | Created | Status |")
                 lines.append("|---|---|---|---|")
 
@@ -1203,7 +1211,7 @@ class ExpManagerTool(BaseTool):
                     tag_str = f"**{t}**" if t == tag else t
                     lines.append(f"| {tag_str} | {parent} | {created} | {status} |")
 
-                lines.append("\n### Lineage\n")
+                lines.append("\n### 🌳 Lineage\n")
                 lines.append("```text")
 
                 visible_tags = set(experiments.keys())
@@ -1235,20 +1243,80 @@ class ExpManagerTool(BaseTool):
                     build_tree(root, "", i == len(roots) - 1)
 
                 lines.append("```\n")
+
+                lines.append("### 📝 Recent Activity")
+                recent_notes = []
+                # Find the latest note from the most recently created active experiments
+                for t, data in items:
+                    if not data.get("archived") and data.get("notes"):
+                        recent_notes.append((t, data["notes"][-1]))
+                        if len(recent_notes) >= 5:
+                            break
+
+                if recent_notes:
+                    for t, note in recent_notes:
+                        lines.append(f"- **{t}**: {note}")
+                else:
+                    lines.append("_No recent notes._")
+                lines.append("\n")
+
             else:
                 lines.append("_No experiments found._\n")
+
+            shared_paths = metadata.get("shared_paths", [])
+            if shared_paths:
+                lines.append("### 🔗 Shared Resources")
+                lines.append(
+                    "These paths are synchronized across experiments (via `emanager sync`):"
+                )
+                for p in shared_paths:
+                    lines.append(f"- `{p}`")
+                lines.append("\n")
+
         else:
             data = metadata.get("experiments", {}).get(tag)
             if data:
                 archived_status = " (Archived)" if data.get("archived") else ""
-                lines.append(f"## Current Experiment: `{tag}`{archived_status}\n")
-                lines.append(f"- **Parent:** `{data.get('parent') or 'None'}`")
+                lines.append(f"## 🧪 Current Experiment: `{tag}`{archived_status}\n")
+
+                path = [tag]
+                curr = data.get("parent")
+                while curr and curr in metadata.get("experiments", {}):
+                    path.insert(0, curr)
+                    curr = metadata["experiments"][curr].get("parent")
+                path.insert(0, "main")
+
+                lines.append(f"**Lineage:** {' → '.join(f'`{p}`' for p in path)}\n")
                 lines.append(f"- **Created:** {data.get('created_at', '')[:19].replace('T', ' ')}")
 
+                syncs = data.get("sync_commits", {})
+                if syncs:
+                    sync_str = ", ".join(f"`{b}`" for b in syncs.keys())
+                    lines.append(f"- **Synced with:** {sync_str}")
+                else:
+                    lines.append("- **Synced with:** _Never synced_")
+
+                lines.append("\n### 📝 Latest Notes")
                 if data.get("notes"):
-                    lines.append("\n### Latest Notes\n")
                     for n in data["notes"][-5:]:
                         lines.append(f"- {n}")
+                else:
+                    lines.append("_No notes yet._")
+
+                lines.append("\n### ⚡ Quick Commands")
+                lines.append("```bash")
+                lines.append('mlrt emanager note "my note"    # Add a note to this experiment')
+                parent = data.get("parent")
+                if parent:
+                    lines.append(
+                        f"mlrt emanager update            # Pull changes from parent ({parent})"
+                    )
+                if metadata.get("shared_paths"):
+                    lines.append(
+                        "mlrt emanager sync main         # Two-way sync shared files with main"
+                    )
+                lines.append("mlrt emanager snapshot          # Save current state")
+                lines.append("```\n")
             else:
                 lines.append(f"**Error:** Experiment '{tag}' not found in metadata.")
 

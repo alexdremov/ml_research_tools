@@ -1,7 +1,7 @@
 Installation
 ============
 
-ML Research Tools can be installed from PyPI or directly from source using Poetry.
+ML Research Tools can be installed from PyPI or directly from source using uv.
 
 From PyPI (Recommended)
 ----------------------
@@ -21,7 +21,7 @@ To install from source:
 
    git clone https://github.com/alexdremov/ml_research_tools.git
    cd ml_research_tools
-   poetry install
+   uv sync
 
 Development Installation
 ----------------------
@@ -30,7 +30,7 @@ For development purposes, install with additional development dependencies:
 
 .. code-block:: bash
 
-   poetry install --with dev
+   uv sync --all-groups
 
 This will install additional packages needed for development, such as testing and code quality tools.
 
@@ -46,7 +46,7 @@ For building documentation:
 
 .. code-block:: bash
 
-   poetry install --with docs
+   uv sync --group docs
 
 All Optional Dependencies
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -55,7 +55,7 @@ To install all optional dependencies:
 
 .. code-block:: bash
 
-   poetry install --all-extras
+   uv sync --all-extras
 
 Verifying Installation
 --------------------
@@ -64,7 +64,7 @@ After installation, verify by running:
 
 .. code-block:: bash
 
-   poetry run ml_research_tools --help
+   uv run ml_research_tools --help
 
 This should display the help message with all available tools and options.
 
@@ -74,7 +74,7 @@ Requirements
 ML Research Tools requires:
 
 * Python 3.10 or later
-* Poetry for dependency management
+* uv for dependency management
 
 Optional Dependencies
 -------------------

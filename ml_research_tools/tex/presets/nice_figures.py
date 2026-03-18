@@ -4,7 +4,6 @@ if typing.TYPE_CHECKING:
     import matplotlib
     import matplotlib.axes
     import matplotlib.figure
-    import matplotlib.pyplot as plt
     import numpy as np
 
 from .sizes import PAPER_SIZES
