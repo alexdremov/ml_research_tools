@@ -280,6 +280,7 @@ class WandbDownloaderTool(BaseTool):
             output_dir: Directory where the log file will be saved
         """
         run.load_full_data()
+        run.load()
 
         # Sanitize the run name for use in filenames
         sanitized_name = self.sanitize_filename(run.name)
@@ -320,7 +321,7 @@ class WandbDownloaderTool(BaseTool):
 
         # Extract the history of the run as a dataframe
         try:
-            history = run.history(pandas=True)
+            history = run.history(pandas=True, samples=None)
         except Exception as e:
             self.logger.warning(f"Failed to retrieve history for run {run.name}/{run.id}: {e}")
             return
