@@ -9,7 +9,15 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Any, List, Optional, TypeVar
 
-from rich.progress import BarColumn, Progress, SpinnerColumn, TaskProgressColumn, TextColumn, TimeElapsedColumn, TimeRemainingColumn
+from rich.progress import (
+    BarColumn,
+    Progress,
+    SpinnerColumn,
+    TaskProgressColumn,
+    TextColumn,
+    TimeElapsedColumn,
+    TimeRemainingColumn,
+)
 from rich_argparse import RichHelpFormatter
 
 from ml_research_tools.core.config import Config, get_config

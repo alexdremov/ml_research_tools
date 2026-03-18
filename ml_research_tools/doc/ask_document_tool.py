@@ -22,21 +22,28 @@ from rich.panel import Panel
 from rich.prompt import Prompt
 from rich.theme import Theme
 
+
 def _has_module(name: str) -> bool:
     import importlib.util
+
     return importlib.util.find_spec(name) is not None
+
 
 def has_requests() -> bool:
     return _has_module("requests")
 
+
 def has_bs4() -> bool:
     return _has_module("bs4")
+
 
 def has_pypdf2() -> bool:
     return _has_module("PyPDF2")
 
+
 def has_tiktoken() -> bool:
     return _has_module("tiktoken")
+
 
 from ml_research_tools.cache import RedisCache, cached, generate_cache_key
 from ml_research_tools.core.base_tool import BaseTool
@@ -238,6 +245,7 @@ class URLParser(DocumentParser):
     def _extract_pdf_content(cls, file_path: str) -> str:
         """Extract text from a PDF file."""
         import PyPDF2
+
         text = ""
         with open(file_path, "rb") as file:
             reader = PyPDF2.PdfReader(file)
@@ -251,6 +259,7 @@ class URLParser(DocumentParser):
         """Extract text content from HTML."""
         if has_bs4():
             from bs4 import BeautifulSoup
+
             # Use BeautifulSoup for better HTML parsing if available
             soup = BeautifulSoup(html_content, "html.parser")
 
@@ -624,7 +633,7 @@ class DocumentChat:
     def stream_llm_response(self) -> str:
         """Stream the LLM response and return the complete response."""
         from openai.types.chat.chat_completion import ChatCompletion
-        
+
         try:
             # Generate API parameters with the appropriate preset/tier
             params = generate_completion_params(

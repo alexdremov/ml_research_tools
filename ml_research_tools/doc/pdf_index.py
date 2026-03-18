@@ -4,18 +4,18 @@ PDF Index Tool - Extract text from PDFs and build searchable index
 """
 
 import argparse
-from collections import defaultdict
 import logging
 import pathlib
+import re
 import sqlite3
 import time
-import re
-from typing import List, Tuple, Optional, Generator
+from collections import defaultdict
 from dataclasses import dataclass
+from typing import Generator, List, Optional, Tuple
 
 import joblib
-from rich.prompt import Prompt
 from rich.panel import Panel
+from rich.prompt import Prompt
 from rich.syntax import Syntax
 from rich.table import Table
 from rich.text import Text
@@ -23,13 +23,13 @@ from rich.text import Text
 from ml_research_tools.core.base_tool import BaseTool
 from ml_research_tools.core.config import Config
 
-
 logger = logging.getLogger(__name__)
 
 
 @dataclass
 class PDFDocument:
     """Represents a PDF document in the index."""
+
     pdf_path: str
     file_mtime: float
     file_size: int
@@ -38,6 +38,7 @@ class PDFDocument:
 @dataclass
 class SearchResult:
     """Represents a search result."""
+
     pdf_path: str
     page_num: int
     snippet: str
@@ -74,7 +75,8 @@ class PDFIndexDB:
     def _create_schema(self):
         """Create database schema if not exists."""
         # Documents table
-        self.conn.execute("""
+        self.conn.execute(
+            """
             CREATE TABLE IF NOT EXISTS documents (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 pdf_path TEXT UNIQUE NOT NULL,
@@ -82,22 +84,27 @@ class PDFIndexDB:
                 file_size INTEGER NOT NULL,
                 indexed_at REAL NOT NULL
             )
-        """)
+        """
+        )
 
         # Create index on pdf_path for faster lookups
-        self.conn.execute("""
+        self.conn.execute(
+            """
             CREATE INDEX IF NOT EXISTS idx_pdf_path ON documents(pdf_path)
-        """)
+        """
+        )
 
         # FTS5 virtual table for full-text search
-        self.conn.execute("""
+        self.conn.execute(
+            """
             CREATE VIRTUAL TABLE IF NOT EXISTS pdf_content USING fts5(
                 doc_id UNINDEXED,
                 page_num UNINDEXED,
                 content,
                 tokenize='porter unicode61'
             )
-        """)
+        """
+        )
 
         self.conn.commit()
 
@@ -110,8 +117,7 @@ class PDFIndexDB:
     def document_exists(self, pdf_path: str, file_mtime: float) -> bool:
         """Check if document is already indexed with same mtime."""
         cursor = self.conn.execute(
-            "SELECT id FROM documents WHERE pdf_path = ? AND file_mtime = ?",
-            (pdf_path, file_mtime)
+            "SELECT id FROM documents WHERE pdf_path = ? AND file_mtime = ?", (pdf_path, file_mtime)
         )
         return cursor.fetchone() is not None
 
@@ -127,9 +133,7 @@ class PDFIndexDB:
 
     def remove_document(self, pdf_path: str):
         """Remove document and its content from index."""
-        cursor = self.conn.execute(
-            "SELECT id FROM documents WHERE pdf_path = ?", (pdf_path,)
-        )
+        cursor = self.conn.execute("SELECT id FROM documents WHERE pdf_path = ?", (pdf_path,))
         row = cursor.fetchone()
         if row:
             doc_id = row[0]
@@ -142,20 +146,21 @@ class PDFIndexDB:
         cursor = self.conn.execute(
             """INSERT INTO documents (pdf_path, file_mtime, file_size, indexed_at)
                VALUES (?, ?, ?, ?)""",
-            (doc.pdf_path, doc.file_mtime, doc.file_size, time.time())
+            (doc.pdf_path, doc.file_mtime, doc.file_size, time.time()),
         )
         doc_id = cursor.lastrowid
 
         # Insert pages in batch
         self.conn.executemany(
             "INSERT INTO pdf_content (doc_id, page_num, content) VALUES (?, ?, ?)",
-            [(doc_id, page_num, text) for page_num, text in pages_text]
+            [(doc_id, page_num, text) for page_num, text in pages_text],
         )
 
     def search(self, query: str, limit: int) -> List[SearchResult]:
         """Search index with FTS5 query."""
         try:
-            cursor = self.conn.execute("""
+            cursor = self.conn.execute(
+                """
                 SELECT
                     d.pdf_path,
                     c.page_num,
@@ -166,16 +171,20 @@ class PDFIndexDB:
                 WHERE pdf_content MATCH ?
                 ORDER BY rank
                 LIMIT ?
-            """, (query, limit))
+            """,
+                (query, limit),
+            )
 
             results = []
             for row in cursor:
-                results.append(SearchResult(
-                    pdf_path=row['pdf_path'],
-                    page_num=row['page_num'],
-                    snippet=row['snippet'],
-                    rank=row['rank']
-                ))
+                results.append(
+                    SearchResult(
+                        pdf_path=row["pdf_path"],
+                        page_num=row["page_num"],
+                        snippet=row["snippet"],
+                        rank=row["rank"],
+                    )
+                )
             return results
         except sqlite3.OperationalError as e:
             logger.error(f"Search error: {e}")
@@ -189,15 +198,17 @@ class PDFIndexDB:
             logger.error(f"Invalid regex pattern: {e}")
             return []
 
-        cursor = self.conn.execute("""
+        cursor = self.conn.execute(
+            """
             SELECT d.pdf_path, c.page_num, c.content
             FROM pdf_content c
             JOIN documents d ON d.id = c.doc_id
-        """)
+        """
+        )
 
         results = []
         for row in cursor:
-            content = row['content']
+            content = row["content"]
             match = compiled.search(content)
             if match:
                 # Create snippet around match
@@ -205,12 +216,14 @@ class PDFIndexDB:
                 end = min(len(content), match.end() + 100)
                 snippet = content[start:end]
 
-                results.append(SearchResult(
-                    pdf_path=row['pdf_path'],
-                    page_num=row['page_num'],
-                    snippet=f"...{snippet}...",
-                    rank=0.0
-                ))
+                results.append(
+                    SearchResult(
+                        pdf_path=row["pdf_path"],
+                        page_num=row["page_num"],
+                        snippet=f"...{snippet}...",
+                        rank=0.0,
+                    )
+                )
 
                 if len(results) >= limit:
                     break
@@ -233,47 +246,35 @@ class PDFIndexTool(BaseTool):
         parser.add_argument(
             "--input-dir",
             type=pathlib.Path,
-            default='.',
-            help="Directory containing PDF files to index"
+            default=".",
+            help="Directory containing PDF files to index",
         )
         parser.add_argument(
             "--index-dir",
             type=pathlib.Path,
-            help="Directory to store index (default: <input_dir>/pdf_index)"
+            help="Directory to store index (default: <input_dir>/pdf_index)",
         )
-        parser.add_argument(
-            "--rebuild",
-            action="store_true",
-            help="Rebuild index from scratch"
-        )
+        parser.add_argument("--rebuild", action="store_true", help="Rebuild index from scratch")
         parser.add_argument(
             "--n-jobs",
             "-n",
             type=int,
             default=-1,
-            help="Number of parallel jobs (default: all CPUs)"
+            help="Number of parallel jobs (default: all CPUs)",
         )
         parser.add_argument(
             "--batch-size",
             type=int,
             default=100,
-            help="Number of documents to commit at once (default: 100)"
+            help="Number of documents to commit at once (default: 100)",
         )
         parser.add_argument(
-            "--no-search",
-            action="store_true",
-            help="Only build index, skip interactive search"
+            "--no-search", action="store_true", help="Only build index, skip interactive search"
         )
         parser.add_argument(
-            "--only-search",
-            action="store_true",
-            help="Only build index, skip interactive search"
+            "--only-search", action="store_true", help="Only build index, skip interactive search"
         )
-        parser.add_argument(
-            "--limit",
-            default=100,
-            help="Results limit"
-        )
+        parser.add_argument("--limit", default=100, help="Results limit")
 
     def execute(self, config: Config, args: argparse.Namespace) -> int:
         """Execute the PDF indexing tool."""
@@ -287,12 +288,14 @@ class PDFIndexTool(BaseTool):
         index_dir.mkdir(exist_ok=True, parents=True)
 
         # Build/update index
-        self.console.print(Panel.fit(
-            f"[bold cyan]PDF Indexer[/bold cyan]\n"
-            f"Input: {input_dir}\n"
-            f"Index: {index_dir}",
-            border_style="cyan"
-        ))
+        self.console.print(
+            Panel.fit(
+                f"[bold cyan]PDF Indexer[/bold cyan]\n"
+                f"Input: {input_dir}\n"
+                f"Index: {index_dir}",
+                border_style="cyan",
+            )
+        )
 
         if not args.only_search:
             success = self._build_index(input_dir, index_dir, args)
@@ -345,7 +348,7 @@ class PDFIndexTool(BaseTool):
             self.console.print(f"Indexing [cyan]{len(files_to_index)}[/cyan] files...")
 
             # Extract text in parallel
-            results = joblib.Parallel(n_jobs=args.n_jobs, return_as='generator')(
+            results = joblib.Parallel(n_jobs=args.n_jobs, return_as="generator")(
                 joblib.delayed(self._extract_pdf_text)(pdf_path, rel_path, stat)
                 for pdf_path, rel_path, stat in files_to_index
             )
@@ -355,9 +358,7 @@ class PDFIndexTool(BaseTool):
             batch = []
 
             with self.create_progress(console=self.console) as progress:
-                task = progress.add_task(
-                    "Indexing PDFs", total=len(files_to_index)
-                )
+                task = progress.add_task("Indexing PDFs", total=len(files_to_index))
 
                 for result in results:
                     progress.update(task, advance=1)
@@ -389,22 +390,21 @@ class PDFIndexTool(BaseTool):
         return True
 
     @staticmethod
-    def _extract_pdf_text(pdf_path: pathlib.Path, rel_path: str, stat) -> Optional[Tuple[PDFDocument, List[Tuple[int, str]]]]:
+    def _extract_pdf_text(
+        pdf_path: pathlib.Path, rel_path: str, stat
+    ) -> Optional[Tuple[PDFDocument, List[Tuple[int, str]]]]:
         """Extract text from PDF file."""
         import fitz
+
         try:
-            doc = PDFDocument(
-                pdf_path=rel_path,
-                file_mtime=stat.st_mtime,
-                file_size=stat.st_size
-            )
+            doc = PDFDocument(pdf_path=rel_path, file_mtime=stat.st_mtime, file_size=stat.st_size)
 
             pages_text = []
 
             with fitz.open(pdf_path) as pdf_doc:
                 for page_num, page in enumerate(pdf_doc):
                     text = page.get_text()
-                    text = text.replace('-\n', '')
+                    text = text.replace("-\n", "")
                     pages_text.append((page_num + 1, text))
 
             return doc, pages_text
@@ -438,24 +438,26 @@ class PDFIndexTool(BaseTool):
 
     def _interactive_search(self, index_dir: pathlib.Path, limit):
         """Interactive search interface."""
-        self.console.print("\n" + "="*70)
-        self.console.print(Panel.fit(
-            "[bold green]Interactive Search[/bold green]\n\n"
-            "Search modes:\n"
-            "  • [cyan]text query[/cyan] - Full-text search\n"
-            "  • [cyan]regex:pattern[/cyan] - Regular expression search\n"
-            "  • [cyan]\"exact phrase\"[/cyan] - Phrase search\n"
-            "  • [cyan]term1 AND term2[/cyan] - Boolean search\n"
-            "  • [cyan]exit[/cyan] or [cyan]quit[/cyan] - Exit\n",
-            border_style="green"
-        ))
+        self.console.print("\n" + "=" * 70)
+        self.console.print(
+            Panel.fit(
+                "[bold green]Interactive Search[/bold green]\n\n"
+                "Search modes:\n"
+                "  • [cyan]text query[/cyan] - Full-text search\n"
+                "  • [cyan]regex:pattern[/cyan] - Regular expression search\n"
+                '  • [cyan]"exact phrase"[/cyan] - Phrase search\n'
+                "  • [cyan]term1 AND term2[/cyan] - Boolean search\n"
+                "  • [cyan]exit[/cyan] or [cyan]quit[/cyan] - Exit\n",
+                border_style="green",
+            )
+        )
 
         with PDFIndexDB(index_dir) as db:
             while True:
                 try:
                     query = Prompt.ask("\n[bold cyan]Query[/bold cyan]", default="")
 
-                    if not query or query.lower() in ['exit', 'quit', 'q']:
+                    if not query or query.lower() in ["exit", "quit", "q"]:
                         self.console.print("[yellow]Goodbye![/yellow]")
                         break
 
@@ -498,9 +500,9 @@ class PDFIndexTool(BaseTool):
             last_page = None
             for result in entries:
                 snippet = result.snippet
-                if "[HIGHLIGHT]" in snippet and '[/HIGHLIGHT]' in snippet:
-                    snippet = result.snippet.replace('[HIGHLIGHT]', '[bold yellow]')
-                    snippet = snippet.replace('[/HIGHLIGHT]', '[/bold yellow]')
+                if "[HIGHLIGHT]" in snippet and "[/HIGHLIGHT]" in snippet:
+                    snippet = result.snippet.replace("[HIGHLIGHT]", "[bold yellow]")
+                    snippet = snippet.replace("[/HIGHLIGHT]", "[/bold yellow]")
                 if last_page == result.page_num:
                     content += f"\n{snippet}\n"
                 else:
@@ -508,16 +510,14 @@ class PDFIndexTool(BaseTool):
 
                 last_page = result.page_num
 
-
             content = content.strip()
             # Create result panel
             try:
-                self.console.print(Panel(
-                    content,
-                    title=f"[bold]{i}. {doc}[/bold]",
-                    border_style="blue",
-                    expand=False
-                ))
+                self.console.print(
+                    Panel(
+                        content, title=f"[bold]{i}. {doc}[/bold]", border_style="blue", expand=False
+                    )
+                )
             except:
                 self.console.print("{i}. {doc}")
                 print(content)

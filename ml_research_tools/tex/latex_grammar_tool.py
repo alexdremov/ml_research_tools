@@ -162,7 +162,9 @@ class LatexGrammarTool(BaseTool):
         group.add_argument("--max-words", type=int, help="Maximum words per chunk")
         group.add_argument("--sleep", type=int, default=0, help="Sleep between requests")
 
-        group.add_argument("--no-words-regroup", action="store_true", help="Do not split lines for readability")
+        group.add_argument(
+            "--no-words-regroup", action="store_true", help="Do not split lines for readability"
+        )
 
     def execute(self, config: Config, args: argparse.Namespace) -> int:
         """
@@ -238,7 +240,9 @@ class LatexGrammarTool(BaseTool):
                 improved_chunk = self.post_process_chunk(improved_chunk)
                 if not args.no_words_regroup:
                     improved_chunk = llm_client.simple_call(
-                        text=self.tool_config["prompts"]["user_rewrite"].format(text=improved_chunk),
+                        text=self.tool_config["prompts"]["user_rewrite"].format(
+                            text=improved_chunk
+                        ),
                         system_prompt=self.tool_config["prompts"]["system_rewrite"],
                         prefix="latex_split",
                     )
@@ -250,10 +254,8 @@ class LatexGrammarTool(BaseTool):
                 if args.sleep:
                     time.sleep(args.sleep)
 
-
         # Combine improved chunks
         improved_text = "\n\n".join(improved_chunks)
-
 
         # Save improved text
         with open(output_file, "w") as file:

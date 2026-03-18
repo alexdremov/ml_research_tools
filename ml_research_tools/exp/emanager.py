@@ -45,11 +45,16 @@ class ExpManagerTool(BaseTool):
         subparsers.add_parser("init", help="Initialize the experiment manager in the current repo")
 
         # Create command
-        create_parser = subparsers.add_parser("create", help="Create a new experiment (from current experiment / branch). Does not preserve parent")
+        create_parser = subparsers.add_parser(
+            "create",
+            help="Create a new experiment (from current experiment / branch). Does not preserve parent",
+        )
         create_parser.add_argument("tag", help="Unique tag for the new experiment")
 
         # Clone command
-        clone_parser = subparsers.add_parser("clone", help="Clone an existing experiment (current by default)")
+        clone_parser = subparsers.add_parser(
+            "clone", help="Clone an existing experiment (current by default)"
+        )
         clone_parser.add_argument("dst", default=None, help="Destination experiment tag")
         clone_parser.add_argument("--src", default=None, help="Source experiment tag")
 
@@ -70,7 +75,9 @@ class ExpManagerTool(BaseTool):
         # Note command
         note_parser = subparsers.add_parser("note", help="Add a note to an experiment")
         note_parser.add_argument("text", help="Note text")
-        note_parser.add_argument("-t", "--tag", help="Experiment tag (defaults to current experiment)")
+        note_parser.add_argument(
+            "-t", "--tag", help="Experiment tag (defaults to current experiment)"
+        )
         note_parser.add_argument(
             "--amend", action="store_true", help="Overwrite the last note instead of appending"
         )
@@ -99,9 +106,7 @@ class ExpManagerTool(BaseTool):
         )
 
         # Snapshot command
-        snapshot_parser = subparsers.add_parser(
-            "snapshot", help="Save current state as a snapshot"
-        )
+        snapshot_parser = subparsers.add_parser("snapshot", help="Save current state as a snapshot")
         snapshot_parser.add_argument(
             "message", nargs="?", default="Snapshot", help="Snapshot message"
         )
@@ -125,7 +130,9 @@ class ExpManagerTool(BaseTool):
         unarchive_parser.add_argument("tag", help="Experiment tag to unarchive")
 
         # Update command
-        subparsers.add_parser("update", help="Update current experiment with changes from its parent")
+        subparsers.add_parser(
+            "update", help="Update current experiment with changes from its parent"
+        )
 
         # Clean command
         subparsers.add_parser("clean", help="Discard uncommitted changes and untracked files")
@@ -146,17 +153,24 @@ class ExpManagerTool(BaseTool):
         )
 
         # Shared commands
-        shared_add_parser = subparsers.add_parser("shared-add", help="Register paths as globally shared")
+        shared_add_parser = subparsers.add_parser(
+            "shared-add", help="Register paths as globally shared"
+        )
         shared_add_parser.add_argument("paths", nargs="+", help="Paths to register")
 
-        shared_remove_parser = subparsers.add_parser("shared-remove", help="Remove paths from globally shared list")
+        shared_remove_parser = subparsers.add_parser(
+            "shared-remove", help="Remove paths from globally shared list"
+        )
         shared_remove_parser.add_argument("paths", nargs="+", help="Paths to remove")
 
         subparsers.add_parser("shared-list", help="List globally shared paths")
 
         sync_parser = subparsers.add_parser("sync", help="Sync shared paths with a base branch")
         sync_parser.add_argument(
-            "base_branch", nargs="?", default="main", help="Base branch to sync with (defaults to main)"
+            "base_branch",
+            nargs="?",
+            default="main",
+            help="Base branch to sync with (defaults to main)",
         )
 
         subparsers.add_parser("push", help="Push all branches and metadata to the remote")
@@ -190,7 +204,12 @@ class ExpManagerTool(BaseTool):
             elif args.command == "note":
                 ret = self._note(args.tag, args.text, args.amend)
             elif args.command == "list":
-                ret = self._list(args.regexp, args.notes, getattr(args, "sort", "date"), getattr(args, "all", False))
+                ret = self._list(
+                    args.regexp,
+                    args.notes,
+                    getattr(args, "sort", "date"),
+                    getattr(args, "all", False),
+                )
             elif args.command == "tree":
                 ret = self._tree(getattr(args, "all", False))
             elif args.command == "status":
@@ -226,8 +245,16 @@ class ExpManagerTool(BaseTool):
                 return 1
 
             if ret == 0 and args.command in [
-                "init", "create", "clone", "switch", "note",
-                "snapshot", "archive", "unarchive", "update", "sync"
+                "init",
+                "create",
+                "clone",
+                "switch",
+                "note",
+                "snapshot",
+                "archive",
+                "unarchive",
+                "update",
+                "sync",
             ]:
                 self._update_readme()
 
@@ -268,7 +295,9 @@ class ExpManagerTool(BaseTool):
         try:
             git("fetch", "origin", META_BRANCH)
         except ProcessExecutionError as e:
-            self.logger.debug(f"Could not fetch metadata branch from remote. It might not exist yet: {e}")
+            self.logger.debug(
+                f"Could not fetch metadata branch from remote. It might not exist yet: {e}"
+            )
             return
 
         local_meta = self._read_metadata_from_ref(META_BRANCH)
@@ -426,7 +455,7 @@ class ExpManagerTool(BaseTool):
             "parent": None,
             "notes": [],
             "created_at": datetime.now().isoformat(),
-            "archived": False
+            "archived": False,
         }
         self._save_metadata(metadata)
         self._push_branch(branch_name)
@@ -439,7 +468,9 @@ class ExpManagerTool(BaseTool):
         metadata = self._read_metadata()
         src = src or self._get_current_tag()
         if src is None:
-            self.console.print(f"[red]Source experiment must be specified as no current experiment found.[/red]")
+            self.console.print(
+                f"[red]Source experiment must be specified as no current experiment found.[/red]"
+            )
             return 1
         if src not in metadata["experiments"]:
             self.console.print(f"[red]Source experiment '{src}' not found.[/red]")
@@ -459,7 +490,9 @@ class ExpManagerTool(BaseTool):
                     git("fetch", "origin", f"{src_branch}:{src_branch}")
                 except ProcessExecutionError as e:
                     self.logger.debug(f"Failed to fetch {src_branch}: {e}")
-                    self.console.print(f"[red]Branch '{src_branch}' not found locally or remotely.[/red]")
+                    self.console.print(
+                        f"[red]Branch '{src_branch}' not found locally or remotely.[/red]"
+                    )
                     return 1
             else:
                 self.console.print(f"[red]Branch '{src_branch}' not found locally.[/red]")
@@ -471,19 +504,23 @@ class ExpManagerTool(BaseTool):
             "parent": src,
             "notes": [f"Cloned from {src}"],
             "created_at": datetime.now().isoformat(),
-            "archived": False
+            "archived": False,
         }
         self._save_metadata(metadata)
         self._push_branch(dst_branch)
 
-        self.console.print(f"[green]Cloned [bold]{src}[/bold] to [bold]{dst}[/bold] and switched.[/green]")
+        self.console.print(
+            f"[green]Cloned [bold]{src}[/bold] to [bold]{dst}[/bold] and switched.[/green]"
+        )
         return 0
 
     def _switch(self, tag: str) -> int:
         """Switch to an existing experiment."""
         metadata = self._read_metadata()
         if tag not in metadata["experiments"]:
-            self.console.print(f"[yellow]Warning: Experiment '{tag}' not found in metadata.[/yellow]")
+            self.console.print(
+                f"[yellow]Warning: Experiment '{tag}' not found in metadata.[/yellow]"
+            )
 
         branch_name = f"exp/{tag}"
         try:
@@ -495,7 +532,9 @@ class ExpManagerTool(BaseTool):
                     git("checkout", branch_name)
                 except ProcessExecutionError as e:
                     self.logger.debug(f"Failed to fetch {branch_name}: {e}")
-                    self.console.print(f"[red]Failed to checkout {branch_name} (locally or remotely).[/red]")
+                    self.console.print(
+                        f"[red]Failed to checkout {branch_name} (locally or remotely).[/red]"
+                    )
                     return 1
             else:
                 self.console.print(f"[red]Failed to checkout {branch_name}.[/red]")
@@ -507,7 +546,7 @@ class ExpManagerTool(BaseTool):
                 "parent": None,
                 "notes": ["Manually tracked after switch"],
                 "created_at": datetime.now().isoformat(),
-                "archived": False
+                "archived": False,
             }
             self._save_metadata(metadata)
 
@@ -563,7 +602,9 @@ class ExpManagerTool(BaseTool):
         """Add or amend a note for an experiment."""
         tag = tag or self._get_current_tag()
         if not tag:
-            self.console.print("[red]Not currently on an experiment branch. Please specify a tag with --tag.[/red]")
+            self.console.print(
+                "[red]Not currently on an experiment branch. Please specify a tag with --tag.[/red]"
+            )
             return 1
 
         metadata = self._read_metadata()
@@ -755,7 +796,9 @@ class ExpManagerTool(BaseTool):
                     git("fetch", "origin", f"{source_branch}:{source_branch}")
                 except ProcessExecutionError as e:
                     self.logger.debug(f"Failed to fetch {source_branch}: {e}")
-                    self.console.print(f"[red]Branch '{source_branch}' not found locally or remotely.[/red]")
+                    self.console.print(
+                        f"[red]Branch '{source_branch}' not found locally or remotely.[/red]"
+                    )
                     return 1
             else:
                 self.console.print(f"[red]Branch '{source_branch}' not found locally.[/red]")
@@ -770,13 +813,17 @@ class ExpManagerTool(BaseTool):
             matched_files = []
 
         if not matched_files:
-            self.console.print(f"[yellow]No files found in '{tag}' matching the provided paths.[/yellow]")
+            self.console.print(
+                f"[yellow]No files found in '{tag}' matching the provided paths.[/yellow]"
+            )
             return 0
 
         files_to_checkout = []
         for file_path in matched_files:
             if os.path.exists(file_path) and not overwrite:
-                if not Confirm.ask(f"File [yellow]{file_path}[/yellow] already exists. Overwrite?", default=False):
+                if not Confirm.ask(
+                    f"File [yellow]{file_path}[/yellow] already exists. Overwrite?", default=False
+                ):
                     self.console.print(f"Skipping [yellow]{file_path}[/yellow].")
                     continue
             files_to_checkout.append(file_path)
@@ -787,7 +834,9 @@ class ExpManagerTool(BaseTool):
 
         try:
             git("checkout", source_branch, "--", *files_to_checkout)
-            self.console.print(f"[green]Successfully took {len(files_to_checkout)} file(s) from [bold]{tag}[/bold].[/green]")
+            self.console.print(
+                f"[green]Successfully took {len(files_to_checkout)} file(s) from [bold]{tag}[/bold].[/green]"
+            )
         except ProcessExecutionError as e:
             self.console.print(f"[red]Failed to take files: {e.stderr or e.stdout or str(e)}[/red]")
             return 1
@@ -846,11 +895,15 @@ class ExpManagerTool(BaseTool):
                 except ProcessExecutionError as e:
                     self.logger.debug(f"Failed to fetch {parent_branch}: {e}")
 
-        self.console.print(f"Updating [bold]{tag}[/bold] with changes from parent [bold]{parent}[/bold]...")
+        self.console.print(
+            f"Updating [bold]{tag}[/bold] with changes from parent [bold]{parent}[/bold]..."
+        )
 
         status = git("status", "--porcelain").strip()
         if status:
-            self.console.print("[red]Working directory is not clean. Please commit or snapshot your changes first.[/red]")
+            self.console.print(
+                "[red]Working directory is not clean. Please commit or snapshot your changes first.[/red]"
+            )
             return 1
 
         try:
@@ -859,7 +912,9 @@ class ExpManagerTool(BaseTool):
             self.console.print(f"[green]{output.strip()}[/green]")
             self.console.print("[green]Successfully updated experiment.[/green]")
         except ProcessExecutionError as e:
-            self.console.print("[red]Rebase conflict! Please resolve conflicts manually, then run 'git rebase --continue'.[/red]")
+            self.console.print(
+                "[red]Rebase conflict! Please resolve conflicts manually, then run 'git rebase --continue'.[/red]"
+            )
             return 1
 
         return 0
@@ -874,7 +929,10 @@ class ExpManagerTool(BaseTool):
         self.console.print("[yellow]The following files will be affected:[/yellow]")
         self.console.print(status)
 
-        if not Confirm.ask("[red]This will destroy all uncommitted modifications and untracked files. Are you sure?[/red]", default=False):
+        if not Confirm.ask(
+            "[red]This will destroy all uncommitted modifications and untracked files. Are you sure?[/red]",
+            default=False,
+        ):
             self.console.print("Clean cancelled.")
             return 0
 
@@ -899,7 +957,9 @@ class ExpManagerTool(BaseTool):
         try:
             git("rev-parse", "--verify", branch_name)
         except ProcessExecutionError:
-            self.console.print(f"[red]Branch '{branch_name}' not found locally. Please fetch it first.[/red]")
+            self.console.print(
+                f"[red]Branch '{branch_name}' not found locally. Please fetch it first.[/red]"
+            )
             return 1
 
         if not output_file:
@@ -926,9 +986,13 @@ class ExpManagerTool(BaseTool):
 
         try:
             output = git("branch", "--contains", commit_hash)
-            branches = [line.strip().lstrip("* ") for line in output.strip().split("\n") if line.strip()]
+            branches = [
+                line.strip().lstrip("* ") for line in output.strip().split("\n") if line.strip()
+            ]
         except ProcessExecutionError as e:
-            self.console.print(f"[red]Failed to find branches: {e.stderr or e.stdout or str(e)}[/red]")
+            self.console.print(
+                f"[red]Failed to find branches: {e.stderr or e.stdout or str(e)}[/red]"
+            )
             return 1
 
         exp_tags = []
@@ -937,13 +1001,17 @@ class ExpManagerTool(BaseTool):
                 exp_tags.append(branch[len("exp/") :])
 
         if not exp_tags:
-            self.console.print(f"[yellow]Commit {commit_hash[:7]} is not part of any experiment branch.[/yellow]")
+            self.console.print(
+                f"[yellow]Commit {commit_hash[:7]} is not part of any experiment branch.[/yellow]"
+            )
             return 0
 
         metadata = self._read_metadata()
         experiments = metadata.get("experiments", {})
 
-        self.console.print(f"[green]Commit [bold]{commit_hash[:7]}[/bold] belongs to the following experiment(s):[/green]")
+        self.console.print(
+            f"[green]Commit [bold]{commit_hash[:7]}[/bold] belongs to the following experiment(s):[/green]"
+        )
         for tag in exp_tags:
             data = experiments.get(tag, {})
             archived = " [dim](Archived)[/dim]" if data.get("archived") else ""
@@ -1003,7 +1071,9 @@ class ExpManagerTool(BaseTool):
                 try:
                     git("fetch", "origin", f"{base_branch}:{base_branch}")
                 except ProcessExecutionError:
-                    self.console.print(f"[red]Base branch '{base_branch}' not found locally or remotely.[/red]")
+                    self.console.print(
+                        f"[red]Base branch '{base_branch}' not found locally or remotely.[/red]"
+                    )
                     return 1
             else:
                 self.console.print(f"[red]Base branch '{base_branch}' not found locally.[/red]")
@@ -1046,7 +1116,9 @@ class ExpManagerTool(BaseTool):
 
         status = git("status", "--porcelain").strip()
         if status:
-            self.console.print("[yellow]Working directory is not clean. Committing current changes first...[/yellow]")
+            self.console.print(
+                "[yellow]Working directory is not clean. Committing current changes first...[/yellow]"
+            )
             git("add", "-A")
             git("commit", "-m", "[snapshot] Pre-sync auto-commit")
 
@@ -1064,12 +1136,18 @@ class ExpManagerTool(BaseTool):
                     if git("status", "--porcelain", "--", *existing_paths).strip():
                         git("add", "--", *existing_paths)
                         git("commit", "-m", f"Sync shared resources from {base_branch}")
-                        self.console.print(f"[green]Successfully pulled shared path(s) from [bold]{base_branch}[/bold].[/green]")
+                        self.console.print(
+                            f"[green]Successfully pulled shared path(s) from [bold]{base_branch}[/bold].[/green]"
+                        )
                 except ProcessExecutionError as e:
-                    self.console.print(f"[red]Conflicts pulling from {base_branch}! Please resolve them, commit, and run sync again.[/red]")
+                    self.console.print(
+                        f"[red]Conflicts pulling from {base_branch}! Please resolve them, commit, and run sync again.[/red]"
+                    )
                     return 1
             else:
-                self.console.print(f"[green]No upstream changes to pull from [bold]{base_branch}[/bold].[/green]")
+                self.console.print(
+                    f"[green]No upstream changes to pull from [bold]{base_branch}[/bold].[/green]"
+                )
 
             # Step 2: Push our fully resolved shared paths back to base_branch
             # Instead of patching, we just copy our exact shared paths over to base_branch to avoid git apply whitespace issues
@@ -1082,9 +1160,13 @@ class ExpManagerTool(BaseTool):
                     if tag:
                         msg = f"Update shared resources from [{tag}]"
                     git("commit", "-m", msg)
-                    self.console.print(f"[green]Successfully pushed shared path(s) to [bold]{base_branch}[/bold].[/green]")
+                    self.console.print(
+                        f"[green]Successfully pushed shared path(s) to [bold]{base_branch}[/bold].[/green]"
+                    )
                 else:
-                    self.console.print(f"[green]No local changes to push to [bold]{base_branch}[/bold].[/green]")
+                    self.console.print(
+                        f"[green]No local changes to push to [bold]{base_branch}[/bold].[/green]"
+                    )
 
                 # Update the sync pointer to the new base_branch HEAD
                 new_base_commit = git("rev-parse", "HEAD").strip()
@@ -1219,7 +1301,9 @@ class ExpManagerTool(BaseTool):
                 except ProcessExecutionError as e:
                     self.logger.debug(f"Failed to auto-commit local README.md: {e}")
             else:
-                self.console.print("[yellow]README.md was updated with experiment data, but left uncommitted due to existing local changes.[/yellow]")
+                self.console.print(
+                    "[yellow]README.md was updated with experiment data, but left uncommitted due to existing local changes.[/yellow]"
+                )
 
         # --- 2. Update main branch README.md ---
         try:
@@ -1256,7 +1340,14 @@ class ExpManagerTool(BaseTool):
                 new_tree_input = "\n".join(new_lines) + "\n"
                 new_tree_sha = (git["mktree"] << new_tree_input)().strip()
 
-                new_commit_sha = git("commit-tree", new_tree_sha, "-p", main_sha, "-m", "[emanager] Auto-update README.md with global experiment data").strip()
+                new_commit_sha = git(
+                    "commit-tree",
+                    new_tree_sha,
+                    "-p",
+                    main_sha,
+                    "-m",
+                    "[emanager] Auto-update README.md with global experiment data",
+                ).strip()
                 git("update-ref", "refs/heads/main", new_commit_sha)
 
                 self.console.print("[dim]Auto-updated README.md on main branch.[/dim]")
@@ -1288,11 +1379,15 @@ class ExpManagerTool(BaseTool):
 
             if branches:
                 git("push", "origin", *branches)
-                self.console.print(f"[green]Successfully pushed {len(branches)} experiment branch(es).[/green]")
+                self.console.print(
+                    f"[green]Successfully pushed {len(branches)} experiment branch(es).[/green]"
+                )
             else:
                 self.console.print("[yellow]No experiment branches found to push.[/yellow]")
         except ProcessExecutionError as e:
-            self.console.print(f"[red]Failed to push branches: {e.stderr or e.stdout or str(e)}[/red]")
+            self.console.print(
+                f"[red]Failed to push branches: {e.stderr or e.stdout or str(e)}[/red]"
+            )
             return 1
 
         return 0

@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 import argparse
-import logging
-import openreview
-import pathlib
-import joblib
 import json
-import urllib
-import re
+import logging
 import os
+import pathlib
+import re
+import urllib
+
+import joblib
+import openreview
 import tenacity
 
 from ml_research_tools.core.base_tool import BaseTool
 from ml_research_tools.core.config import Config
-
 
 logger = logging.getLogger()
 
@@ -34,22 +34,18 @@ def get_venue_pdfs_with_metadata(venue_id, username=None, password=None):
     # Initialize the OpenReview client
     if username and password:
         client = openreview.api.OpenReviewClient(
-            baseurl='https://api2.openreview.net',
-            username=username,
-            password=password
+            baseurl="https://api2.openreview.net", username=username, password=password
         )
     else:
-        client = openreview.api.OpenReviewClient(
-            baseurl='https://api2.openreview.net'
-        )
+        client = openreview.api.OpenReviewClient(baseurl="https://api2.openreview.net")
 
     papers = []
 
     try:
         # Get the venue group
         venue_group = client.get_group(venue_id)
-        submission_name = venue_group.content.get('submission_name', {}).get('value', 'Submission')
-        submission_invitation = f'{venue_id}/-/{submission_name}'
+        submission_name = venue_group.content.get("submission_name", {}).get("value", "Submission")
+        submission_invitation = f"{venue_id}/-/{submission_name}"
 
         # Get all submissions
         print(f"Fetching submissions from {venue_id}...")
@@ -58,7 +54,7 @@ def get_venue_pdfs_with_metadata(venue_id, username=None, password=None):
 
         # Extract metadata and PDF links
         for submission in submissions:
-            pdf_value = submission.content.get('pdf', {}).get('value')
+            pdf_value = submission.content.get("pdf", {}).get("value")
 
             if pdf_value:
                 # Create PDF URL
@@ -66,13 +62,13 @@ def get_venue_pdfs_with_metadata(venue_id, username=None, password=None):
 
                 # Extract metadata
                 paper_data = {
-                    'number': submission.number,
-                    'title': submission.content.get('title', {}).get('value', 'No title'),
-                    'authors': submission.content.get('authors', {}).get('value', []),
-                    'pdf_url': pdf_url,
-                    'forum_url': f"https://openreview.net/forum?id={submission.forum}",
-                    'submission_id': submission.id,
-                    'full': submission.content
+                    "number": submission.number,
+                    "title": submission.content.get("title", {}).get("value", "No title"),
+                    "authors": submission.content.get("authors", {}).get("value", []),
+                    "pdf_url": pdf_url,
+                    "forum_url": f"https://openreview.net/forum?id={submission.forum}",
+                    "submission_id": submission.id,
+                    "full": submission.content,
                 }
 
                 papers.append(paper_data)
@@ -84,6 +80,7 @@ def get_venue_pdfs_with_metadata(venue_id, username=None, password=None):
         raise
 
     return papers
+
 
 class OpenreviewLoadTool(BaseTool):
     name = "oreview-get"
@@ -106,42 +103,32 @@ class OpenreviewLoadTool(BaseTool):
         parser.add_argument(
             "--override",
             help="Override existing PDFs",
-            action='store_true',
+            action="store_true",
         )
-        parser.add_argument(
-            "--n-jobs",
-            "-n",
-            help="Number of workers",
-            type=int
-        )
+        parser.add_argument("--n-jobs", "-n", help="Number of workers", type=int)
 
     def execute(self, config: Config, args: argparse.Namespace) -> int:
         args.output = args.output or args.venue
-        args.output = re.sub(r'[^\w_. -]', '_', args.output)
+        args.output = re.sub(r"[^\w_. -]", "_", args.output)
         output = pathlib.Path(args.output)
         output.mkdir(exist_ok=True)
 
-        papers = get_venue_pdfs_with_metadata(
-            args.venue
-        )
+        papers = get_venue_pdfs_with_metadata(args.venue)
         if args.n_jobs:
-            process = joblib.Parallel(return_as='generator', n_jobs=args.n_jobs)(
+            process = joblib.Parallel(return_as="generator", n_jobs=args.n_jobs)(
                 joblib.delayed(self._load_paper)(paper, output, override=args.override)
                 for paper in papers
             )
         else:
-            process = (
-                self._load_paper(paper, output, override=args.override)
-                for paper in papers
-            )
+            process = (self._load_paper(paper, output, override=args.override) for paper in papers)
 
         with self.create_progress(console=self.console) as progress:
             task_id = progress.add_task("Loading papers", total=len(papers))
             for file, paper in zip(process, papers):
-                paper['file_name'] = file
+                paper["file_name"] = file
                 progress.update(task_id, advance=1, refresh=True)
 
-            with open(output / "index.json", 'w') as f:
+            with open(output / "index.json", "w") as f:
                 json.dump(papers, f)
             return 0
 
@@ -149,18 +136,20 @@ class OpenreviewLoadTool(BaseTool):
     @tenacity.retry(
         stop=tenacity.stop_after_attempt(10),
         wait=tenacity.wait_exponential(multiplier=1.5, min=10, max=60 * 15),
-        retry=tenacity.retry_if_exception(lambda x: 'http' in str(x).lower() or 'retrieval incomplete' in str(x)),
+        retry=tenacity.retry_if_exception(
+            lambda x: "http" in str(x).lower() or "retrieval incomplete" in str(x)
+        ),
         reraise=True,
         after=tenacity.after_log(logger, logging.WARNING),
     )
     def _load_paper(paper, output: pathlib.Path, override=False):
-        if 'pdf_url' not in paper or 'submission_id' not in paper or 'title' not in paper:
+        if "pdf_url" not in paper or "submission_id" not in paper or "title" not in paper:
             return None
 
-        pdf_url = paper.get('pdf_url')
+        pdf_url = paper.get("pdf_url")
 
         file_name = f"{paper['submission_id']}_{paper['title']}.pdf"
-        file_name = re.sub(r'[^\w_. -]', '_', file_name)
+        file_name = re.sub(r"[^\w_. -]", "_", file_name)
 
         result_path = output / file_name
         if not result_path.exists() or override:

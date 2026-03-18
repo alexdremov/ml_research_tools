@@ -50,7 +50,7 @@ Example:
 
 import os
 import time
-from typing import Any, Dict, List, Literal, Optional, Protocol, TypedDict, Union, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Protocol, TypedDict, Union
 
 if TYPE_CHECKING:
     import openai
@@ -233,6 +233,7 @@ class LLMClient:
 
         # Create the OpenAI client
         import openai
+
         self.client = openai.OpenAI(
             api_key=self.config.api_key,
             base_url=self.config.base_url,

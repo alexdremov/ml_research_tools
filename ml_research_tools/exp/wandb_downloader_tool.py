@@ -8,7 +8,7 @@ import json
 import logging
 import os
 import re
-from typing import Set, TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Set
 
 if TYPE_CHECKING:
     import wandb

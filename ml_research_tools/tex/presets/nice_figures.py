@@ -19,7 +19,7 @@ def golden_figure(
     layout="constrained",
     dpi=72,
     **kwargs,
-) -> tuple['matplotlib.figure.Figure', 'matplotlib.axes.Axes']:
+) -> tuple["matplotlib.figure.Figure", "matplotlib.axes.Axes"]:
     """
     Create a figure with a golden ratio aspect ratio.
 
@@ -64,7 +64,7 @@ def golden_subplots(
     layout="constrained",
     dpi=72,
     **kwargs,
-) -> tuple['matplotlib.figure.Figure', 'np.ndarray']:
+) -> tuple["matplotlib.figure.Figure", "np.ndarray"]:
     """
     Create subplots with a golden ratio aspect ratio.
 
