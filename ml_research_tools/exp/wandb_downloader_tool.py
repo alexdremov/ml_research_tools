@@ -8,12 +8,17 @@ import json
 import logging
 import os
 import re
-from typing import Set
+from typing import Set, TYPE_CHECKING, Any
 
-import wandb
+if TYPE_CHECKING:
+    import wandb
+    from wandb.apis.public.runs import Run as WandbRun
+    from wandb.apis.public.runs import Runs as WandbRuns
+else:
+    WandbRun = Any
+    WandbRuns = Any
+
 from rich.panel import Panel
-from wandb.apis.public.runs import Run as WandbRun
-from wandb.apis.public.runs import Runs as WandbRuns
 
 from ml_research_tools.core.base_tool import BaseTool
 
@@ -325,6 +330,11 @@ class WandbDownloaderTool(BaseTool):
         # Add last heartbeat time and run info to history[0]
         history_dict[0]["last_heartbeat_time"] = current_last_heartbeat_time
         history_dict[0]["run_info"] = run_info
+
+        for entry in history_dict:
+            if "_step" in entry:
+                entry.setdefault("step", entry["_step"])
+                entry.setdefault("iteration", entry["_step"])
 
         # Save the dictionary as a JSON file
         try:

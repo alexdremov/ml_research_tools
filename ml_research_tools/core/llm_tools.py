@@ -50,9 +50,14 @@ Example:
 
 import os
 import time
-from typing import Any, Dict, List, Literal, Optional, Protocol, TypedDict, Union
+from typing import Any, Dict, List, Literal, Optional, Protocol, TypedDict, Union, TYPE_CHECKING
 
-import openai
+if TYPE_CHECKING:
+    import openai
+    from openai import OpenAI
+else:
+    OpenAI = Any
+
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 from ml_research_tools.cache import RedisCache, cached, generate_cache_key
@@ -70,14 +75,6 @@ class Message(TypedDict):
 
     role: MessageRole
     content: str
-
-
-# Define the retry conditions and exceptions to retry on
-RETRY_EXCEPTIONS = (
-    openai.APIError,  # General API errors
-    openai.APIConnectionError,  # Network errors
-    openai.RateLimitError,  # Rate limiting
-)
 
 
 def get_llm_config(
@@ -235,6 +232,7 @@ class LLMClient:
             )
 
         # Create the OpenAI client
+        import openai
         self.client = openai.OpenAI(
             api_key=self.config.api_key,
             base_url=self.config.base_url,
@@ -245,7 +243,7 @@ class LLMClient:
         """Get the model name from the configuration."""
         return self.config.model
 
-    def get_openai_client(self) -> openai.OpenAI:
+    def get_openai_client(self) -> OpenAI:
         """Get the raw OpenAI client.
 
         Returns:
@@ -433,6 +431,15 @@ class LLMClient:
     ) -> str:
         """Call LLM API with automatic retries for transient errors."""
         # Create a decorator that configures the retry behavior
+        # Define the retry conditions and exceptions to retry on
+        import openai
+
+        RETRY_EXCEPTIONS = (
+            openai.APIError,  # General API errors
+            openai.APIConnectionError,  # Network errors
+            openai.RateLimitError,  # Rate limiting
+        )
+
         retry_decorator = retry(
             stop=stop_after_attempt(retry_attempts),
             wait=wait_exponential(multiplier=retry_delay, min=retry_delay, max=retry_delay * 10),

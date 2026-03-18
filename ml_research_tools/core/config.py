@@ -92,8 +92,8 @@ class LLMConfig:
     max_tokens: int | None = None
     temperature: float = 0.01
     top_p: float = 1.0
-    retry_attempts: int = 3
-    retry_delay: int = 5
+    retry_attempts: int = 10
+    retry_delay: int = 10
     api_key: Optional[str] = None
     tier: str = "standard"
 

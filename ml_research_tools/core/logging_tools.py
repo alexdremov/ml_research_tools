@@ -25,6 +25,7 @@ def get_console(theme: Optional[dict] = None, **kwargs) -> Console:
     global _console
 
     kwargs["record"] = True
+    kwargs["stderr"] = True
 
     if _console is None:
         if theme:

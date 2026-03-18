@@ -14,6 +14,7 @@ import re
 import subprocess
 import tempfile
 import textwrap
+import time
 from configparser import ConfigParser
 from typing import Any, Dict, List, Optional
 
@@ -58,6 +59,7 @@ DEFAULT_CONFIG = {
             - Pay specific attention to \\begin{{document}} and \\end{{document}} — they must be always kept as-is
             - Use - (known as an hyphen) between the elements of compound words, -- (known as an en-dash) for ranges (for example, "3–7" means "3 to 7"), --- (known as a em-dash) punctuation for digressions in a sentence
             - Make sure all \\section, \\subsection, \\header, ... are correct title-case.
+            - Keep all escapes (\\&, etc) the same or the project will not compile. Do not insert new escape sequences.
 
             Text to edit:
 
@@ -158,6 +160,7 @@ class LatexGrammarTool(BaseTool):
         group.add_argument("--system-prompt", help="Override system prompt")
         group.add_argument("--user-prompt", help="Override user prompt template")
         group.add_argument("--max-words", type=int, help="Maximum words per chunk")
+        group.add_argument("--sleep", type=int, default=0, help="Sleep between requests")
 
         group.add_argument("--no-words-regroup", action="store_true", help="Do not split lines for readability")
 
@@ -243,6 +246,9 @@ class LatexGrammarTool(BaseTool):
 
                 improved_chunks.append(improved_chunk)
                 progress.update(task_id, advance=1)
+
+                if args.sleep:
+                    time.sleep(args.sleep)
 
 
         # Combine improved chunks
@@ -395,13 +401,12 @@ class LatexGrammarTool(BaseTool):
             original_file.flush()
 
             # Run latexdiff
+            command = [
+                "latexdiff",
+                original_file.name,
+                improved_file.name,
+            ]
             try:
-                command = [
-                    "latexdiff",
-                    original_file.name,
-                    improved_file.name,
-                ]
-
                 # Show command being run
                 self.logger.info(f"Running: {' '.join(command)}")
 

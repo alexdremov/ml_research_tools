@@ -18,7 +18,8 @@ def make_search_request(query):
             format="json"
         )
     )
-    assert request.status_code == 200
+    if request.status_code != 200:
+        return None
     return request.json()
 
 
@@ -29,7 +30,8 @@ def get_bib_for_url(url):
             param=1
         )
     )
-    assert request.status_code == 200
+    if request.status_code != 200:
+        return None
     return request.text
 
 
@@ -55,13 +57,19 @@ class BibtexEnrichTool(BaseTool):
     def execute(self, config: Config, args: argparse.Namespace) -> int:
         args.output = args.output or f"{args.input_file}_improved.bib"
 
-        library = bibtexparser.parse_file(args.input_file)
+        with open(args.input_file, 'r') as f:
+            library = bibtexparser.load(f)
         result = []
         for entry in tqdm(library.entries):
             query = entry['title']
-            found = make_search_request(query)['result']['hits']
-            if len(found) == 0 or 'hit' not in found:
-                result.append(entry.raw)
+            found = make_search_request(query)
+            if found is None:
+                result.append(bibtexparser.dumps(entry))
+                self.logger.warning(f"Did not find info about {query}")
+                continue
+            found = found['result']['hits']
+            if found is None or len(found) == 0 or 'hit' not in found:
+                result.append(bibtexparser.dumps(entry))
                 self.logger.warning(f"Did not find info about {query}")
                 continue
 
@@ -69,11 +77,16 @@ class BibtexEnrichTool(BaseTool):
             url = found['info']['url']
             bib = get_bib_for_url(url)
 
-            parsed = bibtexparser.parse_string(bib)
+            parsed = bibtexparser.loads(bib)
             parsed_entry = parsed.entries[0]
 
-            parsed_entry.key = entry.key
-            bib = bibtexparser.write_string(parsed)
+            if parsed.entries[0].get('title', None) != entry['title']:
+                self.logger.warning(f"Title mismatch for {query}: {parsed.entries[0]['title']} != {entry['title']}")
+                result.append(bibtexparser.dumps(entry))
+                continue
+
+            parsed_entry['ID'] = entry['ID']
+            bib = bibtexparser.dumps(parsed)
 
             result.append(bib)
 

@@ -1,4 +1,3 @@
-import itertools
 import os
 import re
 import json
@@ -8,8 +7,10 @@ from collections import defaultdict
 
 
 class ExperimentStore:
-    def __init__(self, path):
+    def __init__(self, path, resolve_restarts=True):
         self.path = path
+        self.resolve_restarts = resolve_restarts
+
         self.experiments = {}
         self._load_experiments()
 
@@ -23,7 +24,25 @@ class ExperimentStore:
             with open(file_path, 'r') as file:
                 experiment_data = json.load(file)
                 experiment_data[0]['run_info']['tags'] = tuple(sorted(experiment_data[0]['run_info']['tags']))
+                if self.resolve_restarts:
+                    experiment_data = self._resolve_restarts(experiment_data)
                 self.experiments[file_name] = experiment_data
+
+    def _resolve_restarts(self, data):
+        per_step_data = defaultdict(list)
+        for step in data[1:]:
+            if 'iteration' not in step:
+                step['iteration'] = step.get("_step", 0)
+
+            per_step_data[step['iteration']].append(step)
+
+        result = []
+        for step in sorted(per_step_data.keys()):
+            restarts_sorted = sorted(per_step_data[step], key=lambda x: x.get('_step', -1))
+            result.append(restarts_sorted[-1])
+
+        data[0]['iteration'] = data[0].get("_step", 0)
+        return data[:1] + result
 
     def get_experiment(self, file_name):
         return self.experiments.get(file_name)
@@ -68,17 +87,21 @@ class ExperimentStore:
             self.experiments[run] for run in total_runs
         ]
 
-    @property
-    def all_tags(self):
-        return set(tag for runs in self.experiments.values() for tag in (runs[0]['run_info']['tags'] or []))
+    def all_tags(self, runs=None):
+        return set(tag for run in (runs or self.experiments.values()) for tag in (run[0]['run_info']['tags'] or []))
 
-    @property
-    def all_states(self):
-        return set(self.run_info(run)['state'] for run in self.experiments.values())
+    def all_states(self, runs=None):
+        return set(self.run_info(run)['state'] for run in (runs or self.experiments.values()))
 
-    @property
-    def all_task_ids(self):
-        return set(self.run_info(run)['id'] for run in self.experiments.values())
+    def all_task_ids(self, runs=None):
+        return set(self.run_info(run)['id'] for run in (runs or self.experiments.values()))
+
+    def all_keys(self, runs=None):
+        keys = set()
+        for run in (runs or self.experiments.values()):
+            for i in run:
+                keys.update(i.keys())
+        return keys
 
     @staticmethod
     def run_info(run):
@@ -91,7 +114,6 @@ class ExperimentStore:
     @staticmethod
     def run_summary(run):
         return ExperimentStore.run_info(run)['summary']
-
 
     @staticmethod
     def merge_runs(runs):

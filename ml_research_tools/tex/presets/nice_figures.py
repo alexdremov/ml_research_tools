@@ -1,8 +1,11 @@
-import matplotlib
-import matplotlib.axes
-import matplotlib.figure
-import matplotlib.pyplot as plt
-import numpy as np
+import typing
+
+if typing.TYPE_CHECKING:
+    import matplotlib
+    import matplotlib.axes
+    import matplotlib.figure
+    import matplotlib.pyplot as plt
+    import numpy as np
 
 from .sizes import PAPER_SIZES
 
@@ -16,7 +19,7 @@ def golden_figure(
     layout="constrained",
     dpi=72,
     **kwargs,
-) -> tuple[matplotlib.figure.Figure, matplotlib.axes.Axes]:
+) -> tuple['matplotlib.figure.Figure', 'matplotlib.axes.Axes']:
     """
     Create a figure with a golden ratio aspect ratio.
 
@@ -29,6 +32,8 @@ def golden_figure(
     Returns:
         Figure: A matplotlib figure object.
     """
+    import numpy as np
+    
     if figsize is None:
         figsize = (
             colwidth,
