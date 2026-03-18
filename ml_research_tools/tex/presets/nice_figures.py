@@ -33,7 +33,7 @@ def golden_figure(
         Figure: A matplotlib figure object.
     """
     import numpy as np
-    
+
     if figsize is None:
         figsize = (
             colwidth,
@@ -64,7 +64,7 @@ def golden_subplots(
     layout="constrained",
     dpi=72,
     **kwargs,
-) -> tuple[matplotlib.figure.Figure, np.ndarray]:
+) -> tuple['matplotlib.figure.Figure', 'np.ndarray']:
     """
     Create subplots with a golden ratio aspect ratio.
 
@@ -78,9 +78,12 @@ def golden_subplots(
     Returns:
         tuple: Figure and array of Axes objects.
     """
+    import matplotlib.pyplot as plt
+
     if figsize is None:
         figsize = (
             colwidth * ncols,
             colwidth / ratio * nrows,
         )  # width, height in inches
+
     return plt.subplots(nrows=nrows, ncols=ncols, figsize=figsize, layout=layout, dpi=dpi, **kwargs)
