@@ -518,8 +518,8 @@ class PDFIndexTool(BaseTool):
                         content, title=f"[bold]{i}. {doc}[/bold]", border_style="blue", expand=False
                     )
                 )
-            except:
-                self.console.print("{i}. {doc}")
+            except Exception:
+                self.console.print(f"{i}. {doc}")
                 print(content)
 
         self.console.print(f"[dim]{len(results)} entries ({len(groupped)} documents)[/dim]")
