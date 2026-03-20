@@ -41,6 +41,7 @@ dependencies = [
     "bibtexparser>=1.4.3",
     "plumbum>=1.10.0",
     "requests>=2.32.5",
+    "textual>=6.2.1",
 ]
 
 [project.urls]

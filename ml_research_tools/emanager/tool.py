@@ -15,7 +15,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from plumbum import ProcessExecutionError
 from plumbum.cmd import git
 from rich.panel import Panel
-from rich.prompt import Confirm
+from rich.prompt import Confirm, Prompt
 from rich.table import Table
 from rich.tree import Tree
 
@@ -71,6 +71,7 @@ class ExpManagerTool(BaseTool):
         diff_parser.add_argument(
             "--stat", action="store_true", help="Show only files changed instead of full diff"
         )
+        diff_parser.add_argument("--path", nargs="*", help="Show diff only for these path(s)")
 
         # Note command
         note_parser = subparsers.add_parser("note", help="Add a note to an experiment")
@@ -123,11 +124,13 @@ class ExpManagerTool(BaseTool):
 
         # Archive command
         archive_parser = subparsers.add_parser("archive", help="Archive an experiment to hide it")
-        archive_parser.add_argument("tag", help="Experiment tag to archive")
+        archive_parser.add_argument("-t", "--tag", default=None, help="Experiment tag to archive")
 
         # Unarchive command
         unarchive_parser = subparsers.add_parser("unarchive", help="Unarchive an experiment")
-        unarchive_parser.add_argument("tag", help="Experiment tag to unarchive")
+        unarchive_parser.add_argument(
+            "-t", "--tag", default=None, help="Experiment tag to unarchive"
+        )
 
         # Update command
         subparsers.add_parser(
@@ -139,7 +142,7 @@ class ExpManagerTool(BaseTool):
 
         # Export command
         export_parser = subparsers.add_parser("export", help="Export an experiment to a zip file")
-        export_parser.add_argument("tag", help="Experiment tag to export")
+        export_parser.add_argument("-t", "--tag", default=None, help="Experiment tag to export")
         export_parser.add_argument(
             "output_file", nargs="?", help="Output zip file path (defaults to <tag>.zip)"
         )
@@ -175,6 +178,8 @@ class ExpManagerTool(BaseTool):
 
         subparsers.add_parser("push", help="Push all branches and metadata to the remote")
 
+        subparsers.add_parser("dashboard", help="Open interactive TUI dashboard")
+
     def execute(self, config, args: argparse.Namespace) -> int:
         """Execute the experiment manager command."""
         if not self._check_git_repo():
@@ -200,7 +205,7 @@ class ExpManagerTool(BaseTool):
             elif args.command == "switch":
                 ret = self._switch(args.tag)
             elif args.command == "diff":
-                ret = self._diff(args.tag1, args.tag2, getattr(args, "stat", False))
+                ret = self._diff(args.tag1, args.tag2, getattr(args, "stat", False), args.path)
             elif args.command == "note":
                 ret = self._note(args.tag, args.text, args.amend)
             elif args.command == "list":
@@ -240,6 +245,8 @@ class ExpManagerTool(BaseTool):
                 ret = self._sync(args.base_branch)
             elif args.command == "push":
                 ret = self._push()
+            elif args.command == "dashboard":
+                ret = self._dashboard()
             else:
                 self.console.print(f"[red]Unknown command: {args.command}[/red]")
                 return 1
@@ -498,6 +505,7 @@ class ExpManagerTool(BaseTool):
                 self.console.print(f"[red]Branch '{src_branch}' not found locally.[/red]")
                 return 1
 
+        self._snapshot("before_clone")
         git("checkout", "-b", dst_branch, src_branch)
 
         metadata["experiments"][dst] = {
@@ -521,6 +529,8 @@ class ExpManagerTool(BaseTool):
             self.console.print(
                 f"[yellow]Warning: Experiment '{tag}' not found in metadata.[/yellow]"
             )
+
+        self._snapshot("before_switch")
 
         branch_name = f"exp/{tag}"
         try:
@@ -559,10 +569,15 @@ class ExpManagerTool(BaseTool):
                     "[yellow]Conflicts detected or could not pull automatically. Please resolve manually.[/yellow]"
                 )
 
+        try:
+            git("submodule", "update", "--init", "--recursive")
+        except ProcessExecutionError as e:
+            self.logger.warning(f"Could not update submodules: {e}")
+
         self.console.print(f"[green]Switched to experiment [bold]{tag}[/bold].[/green]")
         return 0
 
-    def _diff(self, tag1: str, tag2: Optional[str], stat: bool) -> int:
+    def _diff(self, tag1: str, tag2: Optional[str], stat: bool, paths: list[str]) -> int:
         """Diff two experiments."""
         metadata = self._read_metadata()
         if tag1 not in metadata["experiments"]:
@@ -587,6 +602,11 @@ class ExpManagerTool(BaseTool):
             args = ["--color", target1, target2]
             if stat:
                 args.insert(1, "--stat")
+
+            if paths:
+                args.append("--")
+                args.extend(paths)
+
             output = git("diff", *args)
             if output.strip():
                 print(output)
@@ -843,8 +863,13 @@ class ExpManagerTool(BaseTool):
 
         return 0
 
-    def _archive(self, tag: str) -> int:
+    def _archive(self, tag: str | None) -> int:
         """Archive an experiment."""
+        tag = tag or self._get_current_tag()
+        if tag is None:
+            self.console.print("[red]No experiment tag provided or found.[/red]")
+            return 1
+
         metadata = self._read_metadata()
         if tag not in metadata["experiments"]:
             self.console.print(f"[red]Experiment '{tag}' not found.[/red]")
@@ -855,8 +880,13 @@ class ExpManagerTool(BaseTool):
         self.console.print(f"[green]Archived experiment [bold]{tag}[/bold].[/green]")
         return 0
 
-    def _unarchive(self, tag: str) -> int:
+    def _unarchive(self, tag: str | None) -> int:
         """Unarchive an experiment."""
+        tag = tag or self._get_current_tag()
+        if tag is None:
+            self.console.print("[red]No experiment tag provided or found.[/red]")
+            return 1
+
         metadata = self._read_metadata()
         if tag not in metadata["experiments"]:
             self.console.print(f"[red]Experiment '{tag}' not found.[/red]")
@@ -866,6 +896,44 @@ class ExpManagerTool(BaseTool):
         self._save_metadata(metadata)
         self.console.print(f"[green]Unarchived experiment [bold]{tag}[/bold].[/green]")
         return 0
+
+    def _handle_git_conflict(self, error: ProcessExecutionError, context: str) -> bool:
+        """
+        Handle git conflicts interactively.
+        Returns True if resolved, False if aborted.
+        """
+        out = (error.stdout or "") + (error.stderr or "")
+        if "conflict" not in out.lower():
+            return False
+
+        self.console.print(f"\n[bold red]CONFLICT DETECTED during {context}![/bold red]")
+        self.console.print("[yellow]Please resolve the conflicts manually in your editor.[/yellow]")
+        self.console.print("[dim]Once resolved, ensure all files are staged/added.[/dim]\n")
+
+        while True:
+            action = Prompt.ask(
+                "Have you resolved the conflicts?", choices=["yes", "abort"], default="yes"
+            )
+
+            if action == "abort":
+                try:
+                    if "rebase" in context.lower():
+                        git("rebase", "--abort")
+                    elif "merge" in context.lower() or "pull" in context.lower():
+                        git("merge", "--abort")
+                except:
+                    pass
+                return False
+
+            # Check if conflicts are still there
+            status = git("status", "--porcelain").strip()
+            if "UU " in status or "AA " in status:
+                self.console.print(
+                    "[red]Unmerged paths still exist! Please resolve all conflicts first.[/red]"
+                )
+                continue
+
+            return True
 
     def _update(self) -> int:
         """Update current experiment with changes from its parent."""
@@ -912,9 +980,11 @@ class ExpManagerTool(BaseTool):
             self.console.print(f"[green]{output.strip()}[/green]")
             self.console.print("[green]Successfully updated experiment.[/green]")
         except ProcessExecutionError as e:
-            self.console.print(
-                "[red]Rebase conflict! Please resolve conflicts manually, then run 'git rebase --continue'.[/red]"
-            )
+            if self._handle_git_conflict(e, "rebase onto parent"):
+                self.console.print(
+                    "[yellow]Please run 'git rebase --continue' if needed, or ensure the rebase finished.[/yellow]"
+                )
+                return 0
             return 1
 
         return 0
@@ -946,8 +1016,13 @@ class ExpManagerTool(BaseTool):
 
         return 0
 
-    def _export(self, tag: str, output_file: Optional[str]) -> int:
+    def _export(self, tag: str | None, output_file: Optional[str]) -> int:
         """Export an experiment to a zip file."""
+        tag = tag or self._get_current_tag()
+        if tag is None:
+            self.console.print("[red]No experiment tag provided or found.[/red]")
+            return 1
+
         metadata = self._read_metadata()
         if tag not in metadata["experiments"]:
             self.console.print(f"[red]Experiment '{tag}' not found.[/red]")
@@ -1313,7 +1388,7 @@ class ExpManagerTool(BaseTool):
                     )
                 if metadata.get("shared_paths"):
                     lines.append(
-                        "mlrt emanager sync main         # Two-way sync shared files with main"
+                        "mlrt emanager sync main         /# Two-way sync shared files with main"
                     )
                 lines.append("mlrt emanager snapshot          # Save current state")
                 lines.append("```\n")
@@ -1458,4 +1533,12 @@ class ExpManagerTool(BaseTool):
             )
             return 1
 
+        return 0
+
+    def _dashboard(self) -> int:
+        """Launch the TUI dashboard."""
+        from .tui import EmanagerApp
+
+        app = EmanagerApp(self)
+        app.run()
         return 0

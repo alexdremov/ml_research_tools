@@ -33,19 +33,26 @@ class ExperimentStore:
 
     def _resolve_restarts(self, data):
         per_step_data = defaultdict(list)
-        for step in data[1:]:
-            if "iteration" not in step:
-                step["iteration"] = step.get("_step", 0)
-
+        run_info = None
+        for step in data:
+            step.setdefault("iteration", step.get("_step", 0))
             per_step_data[step["iteration"]].append(step)
+            if "run_info" in step:
+                run_info = step.pop("run_info")
 
         result = []
         for step in sorted(per_step_data.keys()):
-            restarts_sorted = sorted(per_step_data[step], key=lambda x: x.get("_step", -1))
-            result.append(restarts_sorted[-1])
+            merged = dict()
+            restarts_sorted = sorted(
+                per_step_data[step], key=lambda x: x.get("_timestamp", x.get("_step"))
+            )
+            merged = restarts_sorted[0]
+            for restart in restarts_sorted[1:]:
+                merged |= {k: v for k, v in restart.items() if v is not None and np.isfinite(v)}
+            result.append(merged)
 
-        data[0]["iteration"] = data[0].get("_step", 0)
-        return data[:1] + result
+        result[0]["run_info"] = run_info
+        return result
 
     def get_experiment(self, file_name):
         return self.experiments.get(file_name)
@@ -124,14 +131,28 @@ class ExperimentStore:
     def merge_runs(runs):
         if len(runs) == 0:
             return None
-        last_run = max(runs, key=lambda x: max([i.get("_timestamp", 0) for i in x] or [0]))
+
+        runs_sorted = sorted(runs, key=lambda x: max([i.get("_timestamp", 0) for i in x] or [0]))
+        last_run = runs_sorted[-1]
         run_info = ExperimentStore.run_info(last_run)
+        by_iteration = defaultdict(dict)
+        for run in runs_sorted:
+            for i in run:
+                by_iteration[i["iteration"]] |= i
+
         merged = []
-        for run in runs:
-            merged.extend({k: v for k, v in i.items() if k != "run_info"} for i in run)
-        merged.sort(key=lambda x: x.get("_timestamp", 0))
+        for iteration in sorted(by_iteration.keys()):
+            merged.append(by_iteration[iteration])
         merged[0]["run_info"] = run_info
         return merged
+
+    @staticmethod
+    def merge_runs_by_name(runs):
+        by_name = defaultdict(list)
+        for run in runs:
+            by_name[ExperimentStore.run_info(run)["name"]].append(run)
+        runs = [ExperimentStore.merge_runs(i) for i in by_name.values()]
+        return runs
 
     @staticmethod
     def groupby(runs, key, merge=False):
@@ -187,13 +208,14 @@ class ExperimentStore:
     def extract(run, fields, ensure_present=True):
         if run is None:
             return []
+        assert isinstance(fields, list) or isinstance(fields, set)
         fields = list(set(fields))
         result = []
         for entry in run:
             row = dict()
             for field in fields:
                 value = entry.get(field)
-                if value is None or value is float("nan") or value == "nan" or np.isnan(value):
+                if value is None or value == "nan" or np.isnan(value):
                     continue
 
                 row[field] = value
