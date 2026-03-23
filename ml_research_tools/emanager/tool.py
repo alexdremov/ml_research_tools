@@ -9,8 +9,9 @@ import json
 import logging
 import os
 import re
+import tempfile
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from plumbum import ProcessExecutionError
 from plumbum.cmd import git
@@ -176,6 +177,16 @@ class ExpManagerTool(BaseTool):
             help="Base branch to sync with (defaults to main)",
         )
 
+        merge_parser = subparsers.add_parser(
+            "merge", help="Merge a specific file from another experiment"
+        )
+        merge_parser.add_argument(
+            "tags", nargs="+", help="One (source) or two (source and target) experiment tags"
+        )
+        merge_parser.add_argument(
+            "-f", "--file", dest="file_path", required=True, help="Path to the file to merge"
+        )
+
         subparsers.add_parser("push", help="Push all branches and metadata to the remote")
 
         subparsers.add_parser("dashboard", help="Open interactive TUI dashboard")
@@ -243,6 +254,8 @@ class ExpManagerTool(BaseTool):
                 ret = self._shared_list()
             elif args.command == "sync":
                 ret = self._sync(args.base_branch)
+            elif args.command == "merge":
+                ret = self._merge(args.tags, args.file_path)
             elif args.command == "push":
                 ret = self._push()
             elif args.command == "dashboard":
@@ -1497,6 +1510,120 @@ class ExpManagerTool(BaseTool):
 
         except ProcessExecutionError as e:
             self.logger.debug(f"Failed to auto-update main README.md: {e}")
+
+    def _merge(self, tags: List[str], file_path: str) -> int:
+        """Merge a file from a source experiment into a target experiment."""
+
+        if len(tags) > 2:
+            self.console.print("[red]Error: Provide at most two tags (source and target).[/red]")
+            return 1
+
+        src_tag = tags[0]
+        tgt_tag = tags[1] if len(tags) == 2 else self._get_current_tag()
+
+        if not tgt_tag:
+            self.console.print(
+                "[red]Error: Not currently on an experiment branch. Specify a target tag.[/red]"
+            )
+            return 1
+
+        metadata = self._read_metadata()
+        if src_tag not in metadata["experiments"]:
+            self.console.print(f"[red]Error: Source experiment '{src_tag}' not found.[/red]")
+            return 1
+        if tgt_tag not in metadata["experiments"]:
+            self.console.print(f"[red]Error: Target experiment '{tgt_tag}' not found.[/red]")
+            return 1
+
+        src_branch = f"exp/{src_tag}"
+        tgt_branch = f"exp/{tgt_tag}"
+
+        # 1. Guard against unstaged/uncommitted changes in the target file
+        try:
+            status = git("status", "--porcelain", "--", file_path).strip()
+            if status:
+                self.console.print(
+                    f"[red]Error: File '{file_path}' has unstaged or uncommitted changes. Commit or stash them before merging.[/red]"
+                )
+                return 1
+        except ProcessExecutionError as e:
+            self.console.print(f"[red]Git error while checking file status: {e}[/red]")
+            return 1
+
+        # 2. Guard against missing source files
+        try:
+            git("ls-tree", "--name-only", src_branch, "--", file_path)
+        except ProcessExecutionError:
+            self.console.print(
+                f"[red]Error: File '{file_path}' does not exist in source experiment '{src_tag}'.[/red]"
+            )
+            return 1
+
+        # 3. Perform three-way file merge
+        try:
+            base_commit = git("merge-base", src_branch, tgt_branch).strip()
+
+            with tempfile.TemporaryDirectory() as temp_dir:
+                base_file = os.path.join(temp_dir, "base_tmp")
+                src_file = os.path.join(temp_dir, "src_tmp")
+
+                # Extract the common ancestor file
+                try:
+                    base_content = git("show", f"{base_commit}:{file_path}")
+                    with open(base_file, "w", encoding="utf-8") as f:
+                        f.write(base_content)
+                except ProcessExecutionError:
+                    # File did not exist in the base commit
+                    open(base_file, "w").close()
+
+                # Extract the source file
+                src_content = git("show", f"{src_branch}:{file_path}")
+                with open(src_file, "w", encoding="utf-8") as f:
+                    f.write(src_content)
+
+                # Ensure the target file exists locally before running merge-file
+                if not os.path.exists(file_path):
+                    target_dir = os.path.dirname(file_path)
+                    if target_dir:
+                        os.makedirs(target_dir, exist_ok=True)
+                    open(file_path, "w").close()
+
+                # Run standard git three-way merge in place
+                try:
+                    git(
+                        "merge-file",
+                        "-L",
+                        tgt_tag,
+                        "-L",
+                        "base",
+                        "-L",
+                        src_tag,
+                        file_path,
+                        base_file,
+                        src_file,
+                    )
+                    self.console.print(
+                        f"[green]Successfully merged '{file_path}' from [bold]{src_tag}[/bold].[/green]"
+                    )
+                except ProcessExecutionError:
+                    # git merge-file returns exit code > 0 if conflicts occurred
+                    self.console.print(
+                        f"[bold yellow]Merge conflicts detected in '{file_path}'.[/bold yellow]"
+                    )
+                    self.console.print(
+                        "[yellow]Please open the file, resolve the conflict markers, and commit the result.[/yellow]"
+                    )
+                    return 1
+
+        except ProcessExecutionError as e:
+            self.console.print(f"[red]Failed to merge file: {e.stderr or e.stdout or str(e)}[/red]")
+            return 1
+        except Exception as e:
+            self.logger.exception("Unexpected error during file merge")
+            self.console.print(f"[red]Unexpected error: {str(e)}[/red]")
+            return 1
+
+        return 0
 
     def _push(self) -> int:
         """Push all branches and metadata to the remote."""
