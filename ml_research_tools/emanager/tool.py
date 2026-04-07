@@ -58,6 +58,7 @@ class ExpManagerTool(BaseTool):
         )
         clone_parser.add_argument("dst", default=None, help="Destination experiment tag")
         clone_parser.add_argument("--src", default=None, help="Source experiment tag")
+        clone_parser.add_argument("--parent", default=None, help="Force set parent to this experiment")
 
         # Switch command
         switch_parser = subparsers.add_parser("switch", help="Switch to an experiment")
@@ -212,7 +213,7 @@ class ExpManagerTool(BaseTool):
             elif args.command == "create":
                 ret = self._create(args.tag)
             elif args.command == "clone":
-                ret = self._clone(args.src, args.dst)
+                ret = self._clone(args.src, args.dst, args.parent)
             elif args.command == "switch":
                 ret = self._switch(args.tag)
             elif args.command == "diff":
@@ -483,10 +484,12 @@ class ExpManagerTool(BaseTool):
         self.console.print(f"[green]Created and switched to experiment [bold]{tag}[/bold].[/green]")
         return 0
 
-    def _clone(self, src: str | None, dst: str) -> int:
+    def _clone(self, src: str | None, dst: str, parent: str | None) -> int:
         """Clone an existing experiment."""
         metadata = self._read_metadata()
         src = src or self._get_current_tag()
+        parent = parent or src
+
         if src is None:
             self.console.print(
                 f"[red]Source experiment must be specified as no current experiment found.[/red]"
@@ -522,8 +525,8 @@ class ExpManagerTool(BaseTool):
         git("checkout", "-b", dst_branch, src_branch)
 
         metadata["experiments"][dst] = {
-            "parent": src,
-            "notes": [f"Cloned from {src}"],
+            "parent": parent,
+            "notes": [f"Cloned from {src}, set parent to {parent}"],
             "created_at": datetime.now().isoformat(),
             "archived": False,
         }
