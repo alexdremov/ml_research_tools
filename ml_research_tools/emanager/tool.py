@@ -58,7 +58,9 @@ class ExpManagerTool(BaseTool):
         )
         clone_parser.add_argument("dst", default=None, help="Destination experiment tag")
         clone_parser.add_argument("--src", default=None, help="Source experiment tag")
-        clone_parser.add_argument("--parent", default=None, help="Force set parent to this experiment")
+        clone_parser.add_argument(
+            "--parent", default=None, help="Force set parent to this experiment"
+        )
 
         # Switch command
         switch_parser = subparsers.add_parser("switch", help="Switch to an experiment")

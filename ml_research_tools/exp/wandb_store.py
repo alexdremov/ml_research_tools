@@ -8,8 +8,8 @@ from tqdm.auto import tqdm
 
 
 class ExperimentStore:
-    def __init__(self, path, resolve_restarts=True):
-        self.path = path
+    def __init__(self, paths: str | list[str], resolve_restarts=True):
+        self.paths = paths
         self.resolve_restarts = resolve_restarts
 
         self.experiments = {}
@@ -17,11 +17,17 @@ class ExperimentStore:
 
     def _load_experiments(self):
         # List all JSON files in the given directory
-        json_files = [f for f in os.listdir(self.path) if f.endswith(".json")]
+        if isinstance(self.paths, str):
+            self.paths = [self.paths]
+        json_files = [
+            os.path.join(path, f)
+            for path in self.paths
+            for f in os.listdir(path)
+            if f.endswith(".json")
+        ]
 
         # Load each JSON file and store its content in self.experiments
-        for file_name in tqdm(json_files, desc="Loading experiments"):
-            file_path = os.path.join(self.path, file_name)
+        for file_path in tqdm(json_files, desc="Loading experiments"):
             with open(file_path, "r") as file:
                 experiment_data = json.load(file)
                 experiment_data[0]["run_info"]["tags"] = tuple(
@@ -29,7 +35,15 @@ class ExperimentStore:
                 )
                 if self.resolve_restarts:
                     experiment_data = self._resolve_restarts(experiment_data)
-                self.experiments[file_name] = experiment_data
+
+                experiment_name = experiment_data[0]["run_info"]["name"]
+                if experiment_name in self.experiments:
+                    existing_run = self.experiments[experiment_name]
+                    self.experiments[experiment_name] = self.merge_runs(
+                        [experiment_data, existing_run]
+                    )
+                else:
+                    self.experiments[experiment_name] = experiment_data
 
     def _resolve_restarts(self, data):
         per_step_data = defaultdict(list)
@@ -138,7 +152,15 @@ class ExperimentStore:
         by_iteration = defaultdict(dict)
         for run in runs_sorted:
             for i in run:
-                by_iteration[i["iteration"]] |= i
+                iteration = i.get("iteration", i.get("step", i.get("_step")))
+                assert (
+                    iteration is not None
+                ), f"{run[0]['run_info']['name']} does not have iteration info: {i}"
+                by_iteration[iteration] |= {
+                    k: v
+                    for k, v in i.items()
+                    if v is not None and (not isinstance(v, float) or not np.isnan(v))
+                }
 
         merged = []
         for iteration in sorted(by_iteration.keys()):

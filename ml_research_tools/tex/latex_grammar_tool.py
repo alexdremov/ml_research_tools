@@ -7,6 +7,7 @@ and wording while preserving LaTeX commands and structures.
 """
 
 import argparse
+import concurrent.futures
 import difflib
 import logging
 import os
@@ -28,8 +29,7 @@ DEFAULT_CONFIG = {
         "max_words_per_chunk": 1024,
     },
     "prompts": {
-        "system": textwrap.dedent(
-            """\
+        "system": textwrap.dedent("""\
             You are a professional academic editor specializing in scientific papers. Your task is to:
 
             1. IMPROVE: Enhance english grammar, clarity, and wording while preserving the original meaning
@@ -45,10 +45,8 @@ DEFAULT_CONFIG = {
 
             FORMAT: Respond only with the improved text, maintaining all original formatting and structure.
 
-            """
-        ),
-        "user": textwrap.dedent(
-            """\
+            """),
+        "user": textwrap.dedent("""\
             Edit the following scientific text to improve grammar and clarity while preserving meaning.
 
             IMPORTANT:
@@ -66,10 +64,8 @@ DEFAULT_CONFIG = {
             ```
             {text}
             ```
-            """
-        ),
-        "system_rewrite": textwrap.dedent(
-            """\
+            """),
+        "system_rewrite": textwrap.dedent("""\
             You are a LaTeX formatter.
             Your only task is to add **single newlines (\\n)** for readability.
 
@@ -91,10 +87,8 @@ DEFAULT_CONFIG = {
 
             ### Output:
             Return only the updated LaTeX text with readability improvements. Nothing else.
-            """
-        ),
-        "user_rewrite": textwrap.dedent(
-            """\
+            """),
+        "user_rewrite": textwrap.dedent("""\
             You are a LaTeX formatter.
             Your only task is to add **single newlines (\\n)** for readability.
 
@@ -123,8 +117,7 @@ DEFAULT_CONFIG = {
             ```
             {text}
             ```
-            """
-        ),
+            """),
     },
 }
 
@@ -161,10 +154,49 @@ class LatexGrammarTool(BaseTool):
         group.add_argument("--user-prompt", help="Override user prompt template")
         group.add_argument("--max-words", type=int, help="Maximum words per chunk")
         group.add_argument("--sleep", type=int, default=0, help="Sleep between requests")
+        group.add_argument("--workers", type=int, default=4, help="Number of concurrent workers")
 
         group.add_argument(
             "--no-words-regroup", action="store_true", help="Do not split lines for readability"
         )
+
+
+    def _process_single_chunk(
+        self,
+        chunk: str,
+        i: int,
+        total: int,
+        llm_client: LLMClient,
+        no_words_regroup: bool,
+        progress: Any,
+        task_id: Any,
+        sleep_time: int
+    ) -> str:
+        """Process a single LaTeX chunk through the LLM pipeline."""
+        chunk_desc = f"Chunk {i}/{total} ({len(chunk)} characters)"
+        progress.update(task_id, description=f"[cyan]Processing {chunk_desc}")
+
+        # Step 1: Grammar Improvement
+        improved_chunk = llm_client.simple_call(
+            text=self.tool_config["prompts"]["user"].format(text=chunk),
+            system_prompt=self.tool_config["prompts"]["system"],
+            prefix="latex_grammar",
+        )
+        improved_chunk = self.post_process_chunk(improved_chunk)
+
+        # Step 2: Readability improvement (regrouping words)
+        if not no_words_regroup:
+            improved_chunk = llm_client.simple_call(
+                text=self.tool_config["prompts"]["user_rewrite"].format(text=improved_chunk),
+                system_prompt=self.tool_config["prompts"]["system_rewrite"],
+                prefix="latex_split",
+            )
+            improved_chunk = self.post_process_chunk(improved_chunk)
+
+        progress.update(task_id, advance=1)
+        if sleep_time:
+            time.sleep(sleep_time)
+        return improved_chunk
 
     def execute(self, config: Config, args: argparse.Namespace) -> int:
         """
@@ -218,41 +250,43 @@ class LatexGrammarTool(BaseTool):
         llm_client = self.services.get_typed("llm_client", LLMClient)
         llm_info = llm_client.config.model
 
-        self.logger.info(f"Processing with LLM {llm_info}")
+        
+
+        self.logger.info(f"Processing with LLM {llm_info} (workers={args.workers})")
 
         # Process each chunk with rich progress indicator
-        improved_chunks = []
+        improved_chunks = [None] * len(chunks)
 
         # Create a progress bar using rich
         with self.create_progress(console=self.console) as progress:
             task_id = progress.add_task("[cyan]Processing LaTeX chunks...", total=len(chunks))
 
-            for i, chunk in enumerate(chunks, 1):
-                chunk_desc = f"Chunk {i}/{len(chunks)} ({len(chunk)} characters)"
-                progress.update(task_id, description=f"[cyan]Processing {chunk_desc}")
+            with concurrent.futures.ThreadPoolExecutor(max_workers=args.workers) as executor:
+                # Use a dictionary to map futures to their original index
+                future_to_index = {
+                    executor.submit(
+                        self._process_single_chunk,
+                        chunk,
+                        i + 1,
+                        len(chunks),
+                        llm_client,
+                        args.no_words_regroup,
+                        progress,
+                        task_id,
+                        args.sleep,
+                    ): i
+                    for i, chunk in enumerate(chunks)
+                }
 
-                # Use the LLM client to process the chunk
-                improved_chunk = llm_client.simple_call(
-                    text=self.tool_config["prompts"]["user"].format(text=chunk),
-                    system_prompt=self.tool_config["prompts"]["system"],
-                    prefix="latex_grammar",
-                )
-                improved_chunk = self.post_process_chunk(improved_chunk)
-                if not args.no_words_regroup:
-                    improved_chunk = llm_client.simple_call(
-                        text=self.tool_config["prompts"]["user_rewrite"].format(
-                            text=improved_chunk
-                        ),
-                        system_prompt=self.tool_config["prompts"]["system_rewrite"],
-                        prefix="latex_split",
-                    )
-                    improved_chunk = self.post_process_chunk(improved_chunk)
-
-                improved_chunks.append(improved_chunk)
-                progress.update(task_id, advance=1)
-
-                if args.sleep:
-                    time.sleep(args.sleep)
+                for future in concurrent.futures.as_completed(future_to_index):
+                    index = future_to_index[future]
+                    try:
+                        improved_chunk = future.result()
+                        improved_chunks[index] = improved_chunk
+                    except Exception as exc:
+                        self.logger.error(f"Chunk {index + 1} generated an exception: {exc}")
+                        # If a chunk fails, we'll keep the original content as a fallback
+                        improved_chunks[index] = chunks[index]
 
         # Combine improved chunks
         improved_text = "\n\n".join(improved_chunks)

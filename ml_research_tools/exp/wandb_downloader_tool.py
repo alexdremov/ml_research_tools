@@ -260,7 +260,8 @@ class WandbDownloaderTool(BaseTool):
         # Delete files that do not correspond to any current run ID
         for file in local_files:
             # Extract run ID from filename (assuming format: <sanitized_name>_<run_id>.json)
-            match = re.match(r".*_(\w+)\.json$", file)
+            # W&B run IDs are typically 8 alphanumeric characters
+            match = re.match(r".*_([a-zA-Z0-9]{8})\.json$", file)
             if match:
                 run_id = match.group(1)
                 if run_id not in current_run_ids:
@@ -321,13 +322,10 @@ class WandbDownloaderTool(BaseTool):
 
         # Extract the history of the run as a dataframe
         try:
-            history = run.history(pandas=True, samples=None)
+            history_dict = list(run.scan_history(page_size=int(2**31 - 1)))
         except Exception as e:
             self.logger.warning(f"Failed to retrieve history for run {run.name}/{run.id}: {e}")
             return
-
-        # Convert the dataframe to a dictionary
-        history_dict = history.to_dict(orient="records")
 
         if len(history_dict) == 0:
             history_dict = [dict()]
